@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+F<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -597,65 +597,56 @@ body{background:var(--wa);color:var(--k);font-family:'Noto Sans TC',sans-serif;f
 'use strict';
 // ═══════════════════════════════════
 //  JSONBIN.IO 同步層
-//  免費・無需任何複雜設定
-//  申請步驟（5分鐘）：
-//  1. 前往 https://jsonbin.io → 免費註冊
-//  2. 右上角 API Keys → 建立一個 → 複製 Master Key
-//  3. 把下方 JSONBIN_KEY 換成你的 Key（格式：$2a$10$...）
-//  4. 第一次開啟網頁會自動建立 BIN，之後就能多人同步
 // ═══════════════════════════════════
-const JSONBIN_KEY = '$2a$10$pssUbfaGvEWYMBslGpQOA.CXkK6S/an.W.MRB5czPVVjjYmHgLZz.'; // ← 貼上你的 API Key
+const JSONBIN_KEY  = '$2a$10$pssUbfaGvEWYMBslGpQOA.CXkK6S/an.W.MRB5czPVVjjYmHgLZz.';
+const JSONBIN_BIN  = '$2a$10$SEhQojsvWbKaDEA3DeLWse/tztZ55460nqEG7C3BFrBiM8zccWnlC';   // ← 步驟說明見下方
 const JSONBIN_BASE = 'https://api.jsonbin.io/v3';
 const SK = {tl:'tl',chk:'chk',notes:'notes',sn:'sn',exp:'exp',rem:'rem'};
 
-let _binId = localStorage.getItem('jp26_binId') || null;
-let _syncReady = false;
-let _lastEtag = null;
+/*
+  ── 取得 BIN ID（只需一次，約 2 分鐘）──
+  1. 登入 https://jsonbin.io
+  2. 左側選單點「Bins」→ 右上角點「+ Create Bin」
+  3. 內容填入：{"_init":true}，Name 填：jp26-trip
+  4. 按「Create」→ 畫面跳出，網址列變成
+     https://jsonbin.io/b/6849xxxxxxxxxxxxx
+     複製那串 ID（6849 開頭）
+  5. 把上方 YOUR_BIN_ID 換成那串 ID
+*/
 
-// ── 初始化：第一次建立 BIN，之後直接讀取 ──
+let _syncReady = false;
+
 async function initSync(){
-  if(JSONBIN_KEY === '$2a$10$pssUbfaGvEWYMBslGpQOA.CXkK6S/an.W.MRB5czPVVjjYmHgLZz.'){
+  if(JSONBIN_BIN === 'YOUR_BIN_ID'){
     setSync('err');
-    console.warn('請在 JSONBIN_KEY 填入你的 JSONBin API Key');
+    console.warn('請依說明填入 JSONBIN_BIN ID');
     return;
   }
+  // 直接測試能否讀取（不做任何 POST）
   try{
-    if(!_binId){
-      // 首次：建立一個新的 BIN
-      const r = await fetch(`${JSONBIN_BASE}/b`, {
-        method:'POST',
-        headers:{'Content-Type':'application/json','X-Master-Key':JSONBIN_KEY,'X-Bin-Name':'jp26-trip','X-Bin-Private':'false'},
-        body: JSON.stringify({_init:true})
-      });
-      const d = await r.json();
-      _binId = d.metadata?.id;
-      if(_binId){
-        localStorage.setItem('jp26_binId', _binId);
-        console.log('JSONBin BIN 建立成功：', _binId);
-      }
-    }
-    _syncReady = !!_binId;
+    const r = await fetch(`${JSONBIN_BASE}/b/${JSONBIN_BIN}/latest`,{
+      headers:{'X-Master-Key':JSONBIN_KEY,'X-Bin-Meta':'false'}
+    });
+    _syncReady = r.ok;
     setSync(_syncReady ? 'ok' : 'err');
+    if(!r.ok) console.warn('JSONBin 連線失敗，狀態碼：', r.status);
   }catch(e){
-    console.warn('JSONBin init 失敗，使用本機模式：', e);
     _syncReady = false;
     setSync('err');
+    console.warn('JSONBin 無法連線，使用本機模式：', e.message);
   }
 }
 
-// ── 讀取單一 key（從整包 BIN 資料裡取出） ──
+// ── 讀取：從雲端整包取出指定 key ──
 async function sGet(k){
-  // 先從 localStorage 快取讀（離線或省流量）
-  const cached = localStorage.getItem('jp26_'+k);
-  // 背景嘗試從雲端讀最新值
-  if(_syncReady && _binId){
+  if(_syncReady){
     try{
-      const r = await fetch(`${JSONBIN_BASE}/b/${_binId}/latest`,{
-        headers:{'X-Master-Key':JSONBIN_KEY}
+      const r = await fetch(`${JSONBIN_BASE}/b/${JSONBIN_BIN}/latest`,{
+        headers:{'X-Master-Key':JSONBIN_KEY,'X-Bin-Meta':'false'}
       });
       if(r.ok){
-        const d = await r.json();
-        const val = d.record?.[k];
+        const rec = await r.json();
+        const val = rec[k];
         if(val !== undefined){
           localStorage.setItem('jp26_'+k, JSON.stringify(val));
           return val;
@@ -663,30 +654,29 @@ async function sGet(k){
       }
     }catch{}
   }
-  try{ return cached ? JSON.parse(cached) : null; }catch{ return null; }
+  try{ const c=localStorage.getItem('jp26_'+k); return c?JSON.parse(c):null; }catch{ return null; }
 }
 
-// ── 寫入：本機立即更新，再把整包資料推到雲端 ──
+// ── 寫入：merge 後整包推雲端 + 存本機 ──
 async function sSet(k, v){
   localStorage.setItem('jp26_'+k, JSON.stringify(v));
-  if(!_syncReady || !_binId) return false;
+  if(!_syncReady) return false;
   try{
-    // 讀現有資料，合併後整包寫回（JSONBin 免費版每個 BIN 一包資料）
-    const r = await fetch(`${JSONBIN_BASE}/b/${_binId}/latest`,{
-      headers:{'X-Master-Key':JSONBIN_KEY}
+    // 先讀現有資料
+    const rr = await fetch(`${JSONBIN_BASE}/b/${JSONBIN_BIN}/latest`,{
+      headers:{'X-Master-Key':JSONBIN_KEY,'X-Bin-Meta':'false'}
     });
     let current = {};
-    if(r.ok){ const d = await r.json(); current = d.record || {}; }
+    if(rr.ok) current = await rr.json();
     current[k] = v;
-    const wr = await fetch(`${JSONBIN_BASE}/b/${_binId}`,{
+    // 整包寫回
+    const wr = await fetch(`${JSONBIN_BASE}/b/${JSONBIN_BIN}`,{
       method:'PUT',
       headers:{'Content-Type':'application/json','X-Master-Key':JSONBIN_KEY},
       body: JSON.stringify(current)
     });
     return wr.ok;
-  }catch(e){
-    return false;
-  }
+  }catch{ return false; }
 }
 
 // ═══════════════════════════════════
@@ -1146,10 +1136,10 @@ function scrollToExp(){const dm={overview:'d1',d1:'d1',d2:'d2',d3:'d3',d4:'d4',d
 // ═══════════════════════════════════
 let lastHash='';
 async function pollUpdates(){
-  if(!_syncReady||!_binId){setSync('err');return;}
+  if(!_syncReady){setSync('err');return;}
   try{
     // 用 /latest 端點，比較整包 hash，有變化才更新 UI
-    const r=await fetch(`${JSONBIN_BASE}/b/${_binId}/latest`,{
+    const r=await fetch(`${JSONBIN_BASE}/b/${JSONBIN_BIN}/latest`,{
       headers:{'X-Master-Key':JSONBIN_KEY}
     });
     if(!r.ok){setSync('err');return;}
@@ -1302,7 +1292,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
   // 設定初始 hash，之後每 30 秒輪詢
   if(_syncReady){
     try{
-      const r=await fetch(`${JSONBIN_BASE}/b/${_binId}/latest`,{headers:{'X-Master-Key':JSONBIN_KEY}});
+      const r=await fetch(`${JSONBIN_BASE}/b/${JSONBIN_BIN}/latest`,{headers:{'X-Master-Key':JSONBIN_KEY}});
       if(r.ok){const d=await r.json();lastHash=JSON.stringify(d.record||{});}
     }catch{}
     setInterval(pollUpdates,30000);
