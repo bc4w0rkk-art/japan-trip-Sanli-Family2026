@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>北陸・名古屋 家族五日記行 2026</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="家族旅行">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;700&family=Shippori+Mincho:wght@400;500;700&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<style>
+:root{
+  --wa:#f5f0e8;--wa2:#ede7d9;--wa3:#e4dcd0;
+  --k:#1a1410;--ks:#3d3530;--kl:#6b5f57;--kg:#a09088;
+  --red:#8b2020;--gold:#b8860b;--grn:#4a6741;--blu:#2c4a6e;--warm:#c4784a;
+  --bdr:#d4c9bc;--bdl:#e8e0d5;
+  --sh:rgba(26,20,16,.07);--shm:rgba(26,20,16,.14);
+  /* discovery palette */
+  --dk:#C96A2A;--dm:#5A8A6A;--dai:#3D6B8E;--df:#7B6BA8;--drd:#C04B5C;
+  --dw:#fff;--dw2:#F7F3EE;--dw3:#F0EBE3;
+  --dt:#2C1810;--dt2:#5A4535;--dt3:#8C7060;
+  --dbd:rgba(44,24,16,.09);--dbd2:rgba(44,24,16,.17);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{background:var(--wa);color:var(--k);font-family:'Noto Sans TC',sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden}
+
+/* ── SYNC BAR ── */
+.sync-bar{background:var(--k);color:rgba(245,240,232,.72);font-size:10px;text-align:center;padding:4px 8px;letter-spacing:.07em;display:flex;align-items:center;justify-content:center;gap:8px}
+.sdot{width:6px;height:6px;border-radius:50%;background:#4a6741;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.sdot.err{background:var(--red);animation:none}
+.sdot.syncing{background:var(--gold)}
+
+/* ── HEADER ── */
+.site-hdr{background:var(--k);color:var(--wa);padding:20px 14px 16px;text-align:center;position:relative;overflow:hidden}
+.site-hdr::after{content:'⛩';position:absolute;font-size:96px;right:-10px;top:-14px;opacity:.05;line-height:1}
+.h-kana{font-size:10px;letter-spacing:.28em;color:var(--gold);margin-bottom:5px}
+.h-title{font-family:'Shippori Mincho',serif;font-size:19px;font-weight:700;letter-spacing:.05em;line-height:1.45;margin-bottom:8px}
+.h-pills{display:flex;justify-content:center;gap:5px;flex-wrap:wrap}
+.h-pill{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.17);border-radius:20px;padding:3px 10px;font-size:10px;color:rgba(245,240,232,.83)}
+
+/* ── LEADER ── */
+.leader-bar{background:var(--red);padding:8px 13px;display:flex;align-items:center;justify-content:center;gap:13px;flex-wrap:wrap;font-size:12px;color:white}
+.leader-bar a{color:rgba(255,255,255,.92);text-decoration:none;font-weight:500}
+
+/* ── TAB NAV ── */
+.tab-nav{background:white;border-bottom:1px solid var(--bdr);display:flex;overflow-x:auto;scrollbar-width:none;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px var(--sh)}
+.tab-nav::-webkit-scrollbar{display:none}
+.tb{flex:0 0 auto;padding:9px 12px;border:none;background:none;font-family:'Noto Sans TC',sans-serif;font-size:10.5px;color:var(--kl);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:1px}
+.tb .dn{font-family:'Shippori Mincho',serif;font-size:14px;font-weight:700;color:var(--k)}
+.tb.active{color:var(--red);border-bottom-color:var(--red)}
+.tb.active .dn{color:var(--red)}
+
+/* ── CONTENT ── */
+.content{max-width:640px;margin:0 auto;padding:0 0 88px}
+.panel{display:none;padding:15px 13px}
+.panel.active{display:block;animation:fu .25s ease}
+@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── DAY HEADER ── */
+.day-hdr{display:flex;align-items:flex-start;gap:11px;margin-bottom:15px;padding-bottom:12px;border-bottom:1px solid var(--bdr)}
+.day-wx{flex-shrink:0;background:white;border:1px solid var(--bdl);border-radius:8px;padding:5px 8px;text-align:center;font-size:10px;color:var(--kg);min-width:44px;margin-left:auto}
+.dbadge{border-radius:8px;padding:6px 10px;text-align:center;flex-shrink:0;color:white}
+.dbadge .dn{font-family:'Shippori Mincho',serif;font-size:20px;font-weight:700;line-height:1;display:block}
+.dbadge .dl{font-size:8px;letter-spacing:.14em;opacity:.65;margin-top:2px;display:block}
+.day-twrap h2{font-family:'Noto Serif TC',serif;font-size:13.5px;font-weight:500;line-height:1.6}
+.day-dline{font-size:10px;color:var(--kg);margin-top:3px}
+
+/* ── EDITABLE TIMELINE ── */
+.tl-wrap{background:white;border:1px solid var(--bdl);border-radius:12px;margin-bottom:13px;overflow:hidden}
+.tl-head{padding:9px 12px;background:var(--wa2);border-bottom:1px solid var(--bdl);display:flex;align-items:center;justify-content:space-between}
+.tl-head-l{font-size:11px;font-weight:500;color:var(--kl);letter-spacing:.05em}
+.tl-add-btn{background:var(--k);color:white;border:none;border-radius:6px;padding:4px 10px;font-size:10px;cursor:pointer;display:flex;align-items:center;gap:3px}
+.tl-item{display:flex;align-items:center;border-bottom:1px solid var(--bdl);position:relative}
+.tl-item:last-child{border-bottom:none}
+.tl-mv{display:flex;flex-direction:column;padding:2px 4px 2px 8px;gap:1px;flex-shrink:0}
+.tl-mv button{background:none;border:1px solid var(--bdr);border-radius:3px;width:18px;height:14px;font-size:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--kg);line-height:1;padding:0}
+.tl-mv button:hover{background:var(--wa2);color:var(--k)}
+.tl-mv button:active{background:var(--k);color:white}
+.tl-time-cell{min-width:52px;padding:8px 4px;flex-shrink:0;position:relative}
+.tl-time-disp{font-family:'Shippori Mincho',serif;font-size:13px;font-weight:700;color:var(--k);cursor:pointer;text-align:center;padding:3px 4px;border-radius:5px;line-height:1.3;white-space:nowrap;display:block}
+.tl-time-disp:hover{background:var(--wa2)}
+.tl-time-disp.empty{color:var(--kg);font-size:11px}
+.tl-time-inp{position:absolute;opacity:0;width:100%;height:100%;top:0;left:0;cursor:pointer;border:none;background:transparent;outline:none}
+.tl-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.tl-text-cell{flex:1;padding:8px 7px}
+.tl-label-inp{width:100%;border:none;background:transparent;font-size:12px;color:var(--ks);outline:none;line-height:1.5;font-family:'Noto Sans TC',sans-serif;font-weight:300}
+.tl-label-inp:focus{background:var(--wa2);border-radius:4px;padding:1px 4px}
+.tl-sub-inp{width:100%;border:none;background:transparent;font-size:10px;color:var(--kg);outline:none;font-family:'Noto Sans TC',sans-serif;font-weight:300;margin-top:1px}
+.tl-sub-inp:focus{background:var(--wa3);border-radius:3px;padding:1px 3px}
+.tl-icon-inp{width:26px;border:none;background:transparent;font-size:15px;text-align:center;outline:none;cursor:pointer;padding:0 3px;flex-shrink:0}
+.tl-del{background:none;border:none;color:var(--kg);cursor:pointer;font-size:14px;padding:0 9px 0 3px;flex-shrink:0;opacity:0;transition:opacity .15s}
+.tl-item:hover .tl-del{opacity:1}
+.tl-add-form{padding:9px 11px;background:var(--wa3);display:none;gap:6px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--bdr)}
+.tl-add-form.open{display:flex}
+.tla{background:white;border:1px solid var(--bdr);border-radius:6px;padding:5px 8px;font-size:11px;font-family:'Noto Sans TC',sans-serif;color:var(--k);outline:none}
+.tla:focus{border-color:var(--gold)}
+.tla-time{width:68px}
+.tla-icon{width:38px;text-align:center}
+.tla-label{flex:1;min-width:110px}
+.tla-sub{width:100%;font-size:10px}
+.tla-ok{background:var(--grn);color:white;border:none;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer}
+.tla-cancel{background:none;border:1px solid var(--bdr);border-radius:6px;padding:5px 9px;font-size:11px;cursor:pointer;color:var(--kl)}
+
+/* ── REMINDER ── */
+.rem-bar{background:#fffbf0;border:1px solid #fce8a0;border-radius:8px;padding:8px 11px;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rem-bar label{font-size:10.5px;color:var(--ks)}
+.rem-time-inp{background:white;border:1px solid var(--bdr);border-radius:5px;padding:4px 7px;font-size:11px;font-family:'Noto Sans TC',sans-serif;outline:none;width:72px}
+.rem-msg-inp{flex:1;min-width:100px;background:white;border:1px solid var(--bdr);border-radius:5px;padding:4px 7px;font-size:11px;font-family:'Noto Sans TC',sans-serif;outline:none}
+.rem-add{background:var(--gold);color:white;border:none;border-radius:5px;padding:5px 10px;font-size:10.5px;cursor:pointer}
+.rem-list{margin-top:6px;width:100%}
+.rem-item{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--bdl);font-size:11px;color:var(--ks)}
+.rem-item:last-child{border-bottom:none}
+.rem-del{background:none;border:none;color:var(--kg);cursor:pointer;font-size:12px;margin-left:auto}
+.notif-btn{background:var(--blu);color:white;border:none;border-radius:6px;padding:5px 11px;font-size:10.5px;cursor:pointer;white-space:nowrap}
+
+/* ── SECTION DIV ── */
+.sdiv{display:flex;align-items:center;gap:7px;margin:12px 0 8px;font-size:10px;letter-spacing:.18em;color:var(--kg);text-transform:uppercase}
+.sdiv::before,.sdiv::after{content:'';flex:1;height:1px;background:var(--bdl)}
+
+/* ── MEALS ── */
+.meals{display:flex;gap:6px;margin-bottom:11px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.meals::-webkit-scrollbar{display:none}
+.mc{flex:0 0 auto;display:flex;align-items:center;gap:4px;background:white;border:1px solid var(--bdr);border-radius:20px;padding:4px 9px}
+.mc-i{font-size:12px}
+.mc-t{font-size:9px;color:var(--kg);display:block}
+.mc-n{font-size:10.5px}
+
+/* ── SPOT CARD (itinerary) ── */
+.sc{background:white;border:1px solid var(--bdl);border-radius:11px;margin-bottom:8px;overflow:hidden;transition:box-shadow .2s}
+.sc:hover{box-shadow:0 3px 12px var(--shm)}
+.sc-hdr{display:flex;align-items:center;gap:8px;padding:10px 10px 10px 9px;cursor:pointer;user-select:none}
+.chk{width:21px;height:21px;border:2px solid var(--bdr);border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;font-size:11px;color:transparent}
+.sc.done .chk{background:var(--grn);border-color:var(--grn);color:white}
+.sc.done .sn{text-decoration:line-through;color:var(--kg)}
+.sc.done{opacity:.72}
+.sico{font-size:18px;flex-shrink:0}
+.sinf{flex:1;min-width:0}
+.sn{font-family:'Noto Serif TC',serif;font-size:13px;font-weight:500;color:var(--k);line-height:1.4}
+.st{font-size:10px;color:var(--kg);margin-top:1px}
+.eico{margin-left:auto;font-size:11px;color:var(--kg);transition:transform .2s;flex-shrink:0}
+.sc.expanded .eico{transform:rotate(180deg)}
+.sb{display:none;border-top:1px solid var(--bdl)}
+.sb.open{display:block;animation:fu .18s ease}
+.sb-tabs{display:flex;border-bottom:1px solid var(--bdl)}
+.sbt{flex:1;padding:7px 3px;text-align:center;font-size:10.5px;cursor:pointer;border:none;background:none;color:var(--kg);transition:all .2s;border-bottom:2px solid transparent}
+.sbt.active{color:var(--k);border-bottom-color:var(--red);font-weight:500}
+.sbc{display:none;padding:11px 11px 11px 9px}
+.sbc.active{display:block;animation:fu .16s ease}
+.sdesc{font-size:11.5px;color:var(--kl);line-height:1.85;margin-bottom:9px}
+.sl{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.lpp{display:inline-flex;align-items:center;gap:3px;padding:4px 9px;border-radius:20px;font-size:10px;text-decoration:none;transition:all .2s;cursor:pointer}
+.lpp-m{background:#e8f0fe;color:#1a73e8;border:1px solid #c5d8fc}.lpp-m:hover{background:#1a73e8;color:white}
+.lpp-w{background:#f3f4f6;color:var(--ks);border:1px solid var(--bdr)}.lpp-w:hover{background:var(--k);color:white}
+.lpp-o{background:#fef3e8;color:#b45309;border:1px solid #fcd9a8}.lpp-o:hover{background:#b45309;color:white}
+
+/* ── NEARBY GRID ── */
+.ng{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:3px}
+@media(min-width:400px){.ng{grid-template-columns:repeat(3,1fr)}}
+.ni{background:var(--wa);border:1px solid var(--bdl);border-radius:8px;padding:8px 8px 7px;cursor:pointer;text-decoration:none;display:flex;flex-direction:column;gap:2px;transition:all .2s}
+.ni:hover{background:var(--k);color:white;border-color:var(--k);transform:translateY(-1px)}
+.ni-i{font-size:17px}
+.ni-n{font-size:11px;font-weight:500;color:var(--k);line-height:1.3}
+.ni:hover .ni-n{color:white}
+.ni-c{font-size:9px;color:var(--kg);line-height:1.3}
+.ni:hover .ni-c{color:rgba(245,240,232,.6)}
+.snote{width:100%;background:var(--wa);border:1px solid var(--bdr);border-radius:7px;padding:8px 10px;font-family:'Noto Sans TC',sans-serif;font-size:11.5px;color:var(--ks);resize:none;min-height:65px;outline:none;transition:border-color .2s;line-height:1.75}
+.snote:focus{border-color:var(--red);background:white}
+.snote::placeholder{color:var(--kg);font-size:11px}
+
+/* ── NOTES ── */
+.note-ta{width:100%;background:white;border:1px solid var(--bdr);border-radius:8px;padding:9px 10px;font-family:'Noto Sans TC',sans-serif;font-size:12px;color:var(--ks);resize:none;min-height:75px;outline:none;transition:border-color .2s;line-height:1.75}
+.note-ta:focus{border-color:var(--red)}
+.note-ta::placeholder{color:var(--kg);font-size:11px}
+
+/* ── EXPENSE ── */
+.esec{background:white;border:1px solid var(--bdl);border-radius:11px;padding:11px;margin-top:8px}
+.etit{font-family:'Noto Serif TC',serif;font-size:12px;font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:4px}
+.erow{display:flex;gap:5px;margin-bottom:5px}
+.ein{flex:1;background:var(--wa);border:1px solid var(--bdr);border-radius:6px;padding:6px 8px;font-size:11px;color:var(--k);outline:none;font-family:'Noto Sans TC',sans-serif}
+.ein:focus{border-color:var(--gold)}
+.eamt{width:80px;text-align:right;background:var(--wa);border:1px solid var(--bdr);border-radius:6px;padding:6px 8px;font-size:11px;color:var(--k);outline:none}
+.eadd{background:var(--gold);color:white;border:none;border-radius:6px;padding:6px 11px;font-size:11.5px;cursor:pointer}
+.eitem{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--bdl);font-size:11px;color:var(--ks)}
+.eitem:last-child{border-bottom:none}
+.edel{background:none;border:none;color:var(--kg);cursor:pointer;font-size:12px}
+.etot{display:flex;justify-content:space-between;padding-top:7px;margin-top:2px;border-top:1px solid var(--bdr);font-size:12px;font-weight:500}
+.tyen{color:var(--gold);font-family:'Shippori Mincho',serif}
+
+/* ── HOTEL ── */
+.hotel-card{background:linear-gradient(135deg,#1a1410,#2d2520);border-radius:11px;padding:12px;margin-bottom:8px;color:var(--wa);display:flex;gap:10px}
+.hico{font-size:22px;flex-shrink:0}
+.hinf h3{font-family:'Shippori Mincho',serif;font-size:12.5px;font-weight:700;margin-bottom:2px}
+.hinf p{font-size:10px;opacity:.58;line-height:1.6}
+.htel{margin-top:5px;font-size:10.5px;color:var(--gold)}
+.htel a{color:var(--gold);text-decoration:none;margin-right:9px}
+
+/* ── FLIGHT ── */
+.fcard{background:var(--blu);color:white;border-radius:11px;padding:13px;margin-bottom:10px;position:relative;overflow:hidden}
+.fcard::after{content:'✈';position:absolute;right:7px;top:5px;font-size:34px;opacity:.1}
+.froute{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.fcity{font-family:'Shippori Mincho',serif;font-size:16px;font-weight:700}
+.farrow{font-size:12px;opacity:.5}
+.fmeta{font-size:11px;opacity:.72;line-height:1.7}
+
+/* ── TIPS ── */
+.tips{background:#fff8f0;border:1px solid #fcd9a8;border-left:3px solid var(--warm);border-radius:7px;padding:7px 10px;font-size:11px;color:var(--ks);line-height:1.75;margin-bottom:8px}
+.tips strong{color:var(--warm)}
+
+/* ── TRANSPORT ── */
+.ts{display:flex;align-items:flex-start;gap:7px;padding:7px 9px;background:var(--wa2);border-radius:7px;margin-bottom:6px;font-size:11px;color:var(--kl)}
+.ts .ti{font-size:13px;flex-shrink:0;margin-top:1px}
+
+/* ── AIRPORT ── */
+.az{background:white;border:1px solid var(--bdl);border-radius:11px;margin-bottom:9px;overflow:hidden}
+.az-t{padding:9px 12px;font-size:11.5px;font-weight:500;background:var(--wa2);border-bottom:1px solid var(--bdl);display:flex;align-items:center;gap:5px}
+.az-r{padding:8px 12px;border-bottom:1px solid var(--bdl);font-size:11px;color:var(--ks);line-height:1.6;display:flex;gap:7px}
+.az-r:last-child{border-bottom:none}
+.az-i{font-size:15px;flex-shrink:0;margin-top:1px}
+
+/* ── OVERVIEW CARDS ── */
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px}
+.ovc{background:white;border:1px solid var(--bdl);border-radius:9px;padding:10px}
+.ov-ic{font-size:16px;margin-bottom:2px}
+.ov-lb{font-size:10px;color:var(--kg)}
+.ov-vl{font-family:'Shippori Mincho',serif;font-size:14px;font-weight:700;margin-top:1px}
+.ov-sb{font-size:10px;color:var(--kg);margin-top:1px}
+.hrow{background:white;border:1px solid var(--bdl);border-radius:9px;padding:9px 11px;margin-bottom:6px;display:flex;gap:8px}
+.hrd{font-size:10px;color:var(--kg);min-width:35px;flex-shrink:0;padding-top:1px}
+.hrn{font-size:11.5px;color:var(--ks);font-weight:500}
+.hrc{font-size:10px;color:var(--kg);margin-top:2px}
+.hrc a{color:var(--blu);text-decoration:none}
+
+/* ── INFO ── */
+.isec{background:white;border:1px solid var(--bdl);border-radius:11px;margin-bottom:8px;overflow:hidden}
+.ist{padding:9px 12px;font-size:10.5px;font-weight:500;background:var(--wa2);border-bottom:1px solid var(--bdl);display:flex;align-items:center;gap:4px}
+.irow{padding:7px 12px;border-bottom:1px solid var(--bdl);font-size:11px;color:var(--ks);line-height:1.65;display:flex;gap:8px}
+.irow:last-child{border-bottom:none}
+.ilb{min-width:58px;color:var(--kg);font-size:10px;flex-shrink:0;padding-top:1px}
+.irow a{color:var(--blu);text-decoration:none}
+
+/* ── BOTTOM NAV ── */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--bdr);display:flex;justify-content:space-around;padding:6px 0 env(safe-area-inset-bottom,6px);z-index:200;box-shadow:0 -3px 12px var(--sh)}
+.bb{display:flex;flex-direction:column;align-items:center;gap:1px;padding:3px 8px;cursor:pointer;border:none;background:none;color:var(--kg);font-size:9px;font-family:'Noto Sans TC',sans-serif;letter-spacing:.03em;transition:color .2s}
+.bb .bi{font-size:18px}
+.bb.active{color:var(--red)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(18px);background:var(--k);color:var(--wa);padding:7px 16px;border-radius:20px;font-size:11px;opacity:0;transition:all .3s;pointer-events:none;z-index:300;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ══════════════════════════════
+   DISCOVERY (景點餐廳庫) STYLES
+   ══════════════════════════════ */
+.disc-wrap{display:flex;flex-direction:column;height:calc(100vh - 180px);min-height:400px}
+.disc-search-row{display:flex;gap:6px;margin-bottom:8px;align-items:center}
+.disc-srch{position:relative;flex:1}
+.disc-srch input{width:100%;background:white;border:1px solid var(--bdr);border-radius:20px;padding:7px 28px 7px 12px;color:var(--k);font-size:.82rem;font-family:inherit;outline:none}
+.disc-srch input:focus{border-color:var(--dk)}
+.disc-srch input::placeholder{color:var(--kg)}
+.disc-srch-ic{position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:.73rem;opacity:.35;pointer-events:none}
+.disc-map-btn{flex-shrink:0;background:var(--wa2);border:1px solid var(--bdr);border-radius:8px;padding:6px 10px;font-size:.68rem;color:var(--ks);cursor:pointer;font-family:inherit;white-space:nowrap}
+.disc-map-btn.on{background:var(--blu);color:white;border-color:var(--blu)}
+.disc-cats{display:flex;gap:4px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.disc-cats::-webkit-scrollbar{display:none}
+.dcat{flex-shrink:0;padding:4px 9px;border-radius:11px;border:1px solid var(--bdr);background:white;color:var(--kg);font-size:.68rem;font-family:inherit;cursor:pointer;white-space:nowrap}
+.dcat.on{background:var(--dk);color:white;border-color:var(--dk)}
+.disc-body{display:flex;flex:1;min-height:0;border:1px solid var(--bdl);border-radius:10px;overflow:hidden;background:white}
+.disc-lp{width:100px;flex-shrink:0;background:var(--dw2);border-right:1px solid var(--dbd);overflow-y:auto;scrollbar-width:none;display:flex;flex-direction:column}
+.disc-lp::-webkit-scrollbar{display:none}
+.dlp-all{padding:8px 0;text-align:center;cursor:pointer;border-bottom:1px solid var(--dbd);font-size:.65rem;font-weight:700;color:var(--dt3);font-family:inherit;background:none;border-top:none;border-left:none;border-right:none;width:100%}
+.dlp-all.on{background:var(--dw);color:var(--dk)}
+.dcb{cursor:pointer;border-bottom:1px solid var(--dbd);width:100%;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit;text-align:left;padding:0}
+.dcb.on{background:var(--dw)}
+.dcb-inner{padding:8px 4px 2px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.dcb-em{font-size:1.2rem}
+.dcb-nm{font-size:.63rem;font-weight:700;line-height:1.3;color:var(--dt);text-align:center}
+.dcb-dy{font-size:.55rem;color:var(--dt3)}
+.dcb-ct{font-size:.55rem;color:var(--dt3);background:var(--dw3);border-radius:5px;padding:1px 4px;margin:2px 4px 4px;display:block;text-align:center}
+.dcb-zones{display:none;border-top:1px solid var(--dbd)}
+.dcb.on .dcb-zones{display:block}
+.dzb{display:block;width:100%;text-align:left;padding:4px 6px 4px 8px;font-size:.6rem;font-family:inherit;border:none;background:none;cursor:pointer;color:var(--dt2);border-left:2px solid transparent;line-height:1.4}
+.dzb.on{background:var(--dw3);border-left-color:var(--dk);color:var(--dk);font-weight:700}
+.dzb-c{font-size:.52rem;color:var(--dt3);display:block}
+.disc-rp{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:var(--dbd2) transparent}
+.d-ov{padding:8px 11px 7px;background:var(--dw);border-bottom:1px solid var(--dbd);border-left:3px solid var(--dk)}
+.d-ov-top{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+.d-ov-nm{font-size:.85rem;font-weight:700;color:var(--dt);font-family:'Shippori Mincho',serif}
+.d-ov-desc{font-size:.63rem;color:var(--dt2);margin-bottom:4px}
+.d-ov-pills{display:flex;flex-wrap:wrap;gap:3px}
+.d-pill{font-size:.55rem;background:var(--dw2);border:1px solid var(--dbd);border-radius:6px;padding:2px 5px;color:var(--dt2)}
+.d-pill.go{background:rgba(201,106,42,.08);border-color:rgba(201,106,42,.25);color:var(--dk);cursor:pointer;font-weight:700}
+.dzh{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:5px 11px;font-size:.63rem;font-weight:700;letter-spacing:.5px;color:#fff}
+.dzh-cnt{background:rgba(255,255,255,.22);border-radius:6px;padding:1px 5px;font-weight:400;font-size:.58rem}
+.dspot{background:var(--dw);border-bottom:1px solid var(--dbd);padding:8px 11px 7px;cursor:pointer;display:flex;gap:7px;align-items:flex-start}
+.dspot:active{background:var(--dw2)}
+.ds-ico{font-size:1.15rem;flex-shrink:0;width:22px;text-align:center;padding-top:1px}
+.ds-main{flex:1;min-width:0}
+.ds-top{display:flex;align-items:flex-start;justify-content:space-between;gap:4px;margin-bottom:2px}
+.ds-nm{font-size:.83rem;font-weight:700;color:var(--dt);line-height:1.3;font-family:'Shippori Mincho',serif}
+.ds-jp{font-size:.58rem;color:var(--dt3);margin-top:1px}
+.ds-hl{font-size:.72rem;color:var(--dt2);line-height:1.55;margin:2px 0 4px}
+.ds-tags{display:flex;flex-wrap:wrap;gap:3px}
+.dtag{font-size:.58rem;background:var(--dw2);border:1px solid var(--dbd2);border-radius:5px;padding:2px 5px;color:var(--dt3)}
+.dtag.景點{background:rgba(90,138,106,.07);border-color:rgba(90,138,106,.2);color:var(--dm)}
+.dtag.餐飲{background:rgba(192,75,92,.07);border-color:rgba(192,75,92,.2);color:var(--drd)}
+.dtag.咖啡甜點{background:rgba(200,146,42,.07);border-color:rgba(200,146,42,.2);color:var(--dk)}
+.dtag.購物{background:rgba(61,107,142,.07);border-color:rgba(61,107,142,.2);color:var(--dai)}
+.ds-rt{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0}
+.ds-rg{font-size:.62rem;font-weight:700;color:#e53935}
+.ds-pr{font-size:.6rem;color:var(--dm);font-weight:700}
+.ds-pl{font-size:.53rem;background:rgba(201,106,42,.1);color:var(--dk);border:1px solid rgba(201,106,42,.25);border-radius:5px;padding:2px 4px;font-weight:700}
+.ds-day{font-size:.53rem;background:rgba(61,107,142,.1);color:var(--dai);border:1px solid rgba(61,107,142,.25);border-radius:5px;padding:2px 4px;font-weight:700}
+.d-drawer{display:none;background:var(--dw2);border-bottom:2px solid var(--dbd2);padding:7px 11px 9px 35px}
+.d-drawer.open{display:block}
+.d-rev{background:var(--dw);border:1px solid var(--dbd2);border-radius:5px;padding:6px 9px;font-size:.72rem;color:var(--dt2);line-height:1.7;margin-bottom:6px;font-style:italic;border-left:2px solid var(--dk)}
+.d-row{display:flex;gap:5px;margin-bottom:3px;font-size:.7rem}
+.d-lbl{color:var(--dt3);flex-shrink:0;width:42px;font-size:.63rem}
+.d-val{color:var(--dt2);flex:1;line-height:1.55}
+.d-must{display:flex;flex-wrap:wrap;gap:3px;margin-top:2px}
+.d-mi{font-size:.63rem;background:rgba(201,106,42,.09);border:1px solid rgba(201,106,42,.18);border-radius:5px;padding:2px 5px;color:var(--dk)}
+.d-btns{display:flex;gap:5px;margin-top:7px}
+.ddb{flex:1;padding:6px 4px;border-radius:5px;border:none;font-size:.66rem;font-family:inherit;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:3px;text-decoration:none}
+.ddb.mp{background:rgba(61,107,142,.09);color:var(--dai);border:1px solid rgba(61,107,142,.18)}
+.ddb.wb{background:rgba(90,138,106,.09);color:var(--dm);border:1px solid rgba(90,138,106,.18)}
+.disc-cnt{font-size:.68rem;color:var(--dt3);padding:5px 11px;background:var(--dw2);border-top:1px solid var(--dbd);flex-shrink:0}
+.disc-cnt span{color:var(--dk);font-weight:700}
+.d-empty{padding:28px 14px;text-align:center;color:var(--dt3);font-size:.8rem}
+.d-res-hd{padding:6px 11px;font-size:.63rem;font-weight:700;color:var(--dt3);letter-spacing:.4px;background:var(--dw2);border-bottom:1px solid var(--dbd);position:sticky;top:0;z-index:5}
+
+/* ── WEATHER CARDS ── */
+.wx-card{flex:0 0 80px;background:white;border:1px solid var(--bdl);border-radius:10px;padding:9px 8px;text-align:center;cursor:pointer;transition:all .2s}
+.wx-card:hover{box-shadow:0 3px 10px var(--shm);transform:translateY(-1px)}
+.wx-city{font-size:9px;color:var(--kg);margin-bottom:3px;white-space:nowrap}
+.wx-ico{font-size:22px;line-height:1.2;margin:2px 0}
+.wx-temp{font-family:'Shippori Mincho',serif;font-size:15px;font-weight:700;color:var(--k)}
+.wx-desc{font-size:9px;color:var(--kg);margin-top:2px;line-height:1.3}
+.wx-card.rain{border-color:#90caf9;background:#f0f8ff}
+.wx-card.cloud{border-color:#bdbdbd;background:#fafafa}
+.wx-card.snow{border-color:#b3e5fc;background:#e1f5fe}
+.wx-card.clear{border-color:#ffe082;background:#fffde7}
+.lyr-btn{font-size:.58rem;padding:3px 8px;border-radius:10px;border:none;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;gap:3px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.lyr-btn.off{opacity:.3;text-decoration:line-through}
+#weather-strip::-webkit-scrollbar{display:none}
+#leafletMap{width:100%;height:260px;border-radius:8px;z-index:0}
+.city-marker{display:flex;align-items:center;justify-content:center;border-radius:50%;border:2px solid rgba(255,255,255,.95);font-weight:700;font-family:'Shippori Mincho',serif;color:#fff;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);font-size:10px;transition:transform .15s}
+.city-marker:hover{transform:scale(1.12)}
+.city-label{background:transparent!important;border:none!important;font-family:'Shippori Mincho',serif;font-weight:700;font-size:10px;white-space:nowrap;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff}
+.lyr-ctrl{display:flex;gap:5px;margin-bottom:5px;flex-wrap:wrap}
+.lyr-btn{font-size:.58rem;padding:3px 8px;border-radius:10px;border:none;cursor:pointer;font-family:inherit;font-weight:700;display:flex;align-items:center;gap:3px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.lyr-btn.off{opacity:.3;text-decoration:line-through}
+</style>
+</head>
+<body>
+
+<div class="sync-bar" id="syncBar">
+  <span class="sdot" id="sdot"></span>
+  <span id="syncTxt">多人同步已啟動・資料即時共享</span>
+  <button class="notif-btn" id="notifBtn" onclick="requestNotif()" style="display:none">🔔 開啟提醒</button>
+</div>
+
+<header class="site-hdr">
+  <div class="h-kana">2026 · JAPAN FAMILY JOURNEY · 五月</div>
+  <h1 class="h-title">北陸立山黑部・名古屋<br>家族五日記行</h1>
+  <div class="h-pills">
+    <span class="h-pill">✈ CI154／CI155</span>
+    <span class="h-pill">📅 5/15–5/19</span>
+    <span class="h-pill">❄️ 雪之大谷</span>
+    <span class="h-pill">🦀 螃蟹吃到飽</span>
+  </div>
+</header>
+
+<div class="leader-bar">
+  <span>🎫 領隊 游鎧睿</span>
+  <a href="tel:+886988478111">📞 台 0988-478-111</a>
+  <a href="tel:+810705554898">📞 日 070-5554-8989</a>
+</div>
+
+<nav class="tab-nav">
+  <button class="tb active" onclick="switchTab('overview')"><span class="dn">🗾</span>總覽</button>
+  <button class="tb" onclick="switchTab('d1')"><span class="dn">1</span>名古屋</button>
+  <button class="tb" onclick="switchTab('d2')"><span class="dn">2</span>高山·上高地</button>
+  <button class="tb" onclick="switchTab('d3')"><span class="dn">3</span>立山黑部</button>
+  <button class="tb" onclick="switchTab('d4')"><span class="dn">4</span>兼六·白川</button>
+  <button class="tb" onclick="switchTab('d5')"><span class="dn">5</span>回程</button>
+  <button class="tb" onclick="switchTab('disc')"><span class="dn">🗺</span>景點庫</button>
+  <button class="tb" onclick="switchTab('info')"><span class="dn">ℹ</span>資訊</button>
+</nav>
+
+<div class="content">
+
+<!-- ═══ OVERVIEW ═══ -->
+<div id="panel-overview" class="panel active">
+
+  <!-- 天氣帶 -->
+  <div id="weather-strip" style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin-bottom:12px">
+    <div class="wx-card" id="wx-d1"><div class="wx-city">名古屋 D1</div><div class="wx-ico">⏳</div><div class="wx-temp">--</div><div class="wx-desc">載入中</div></div>
+    <div class="wx-card" id="wx-d2"><div class="wx-city">高山 D2</div><div class="wx-ico">⏳</div><div class="wx-temp">--</div><div class="wx-desc">載入中</div></div>
+    <div class="wx-card" id="wx-d3"><div class="wx-city">立山 D3</div><div class="wx-ico">⏳</div><div class="wx-temp">--</div><div class="wx-desc">載入中</div></div>
+    <div class="wx-card" id="wx-d4"><div class="wx-city">金澤 D4</div><div class="wx-ico">⏳</div><div class="wx-temp">--</div><div class="wx-desc">載入中</div></div>
+    <div class="wx-card" id="wx-d5"><div class="wx-city">名古屋 D5</div><div class="wx-ico">⏳</div><div class="wx-temp">--</div><div class="wx-desc">載入中</div></div>
+  </div>
+
+  <!-- 行程地圖 -->
+  <div style="margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div style="font-family:'Shippori Mincho',serif;font-size:15px;font-weight:700">行程路線地圖</div>
+      <div style="font-size:10px;color:var(--kg)">點城市圓圈查景點</div>
+    </div>
+    <div style="background:white;border:1px solid var(--bdl);border-radius:10px;overflow:hidden">
+      <div class="lyr-ctrl" style="padding:7px 10px 0;gap:5px">
+        <button id="ov-lbtn-bus" class="lyr-btn" onclick="ovTogLayer('bus',this)" style="background:rgba(192,112,32,.12);color:#884010;border:1px solid rgba(192,112,32,.35)">🚌 交通路線</button>
+        <button id="ov-lbtn-time" class="lyr-btn" onclick="ovTogLayer('time',this)" style="background:rgba(120,120,120,.1);color:#555;border:1px solid rgba(120,120,120,.25)">⏱ 時間標</button>
+        <button id="ov-lbtn-wx" class="lyr-btn on" onclick="ovTogLayer('wx',this)" style="background:rgba(44,74,110,.12);color:#2c4a6e;border:1px solid rgba(44,74,110,.3)">🌤 天氣</button>
+      </div>
+      <div id="ovMap" style="width:100%;height:240px;z-index:0"></div>
+      <div id="ov-legend" style="display:flex;flex-wrap:wrap;gap:4px;padding:7px 10px"></div>
+    </div>
+  </div>
+
+  <!-- 快速資訊 -->
+  <div class="ov-grid">
+    <div class="ovc"><div class="ov-ic">✈</div><div class="ov-lb">去程 CI 154</div><div class="ov-vl">07:30</div><div class="ov-sb">桃園→名古屋 11:20</div></div>
+    <div class="ovc"><div class="ov-ic">🏠</div><div class="ov-lb">回程 CI 155</div><div class="ov-vl">12:20</div><div class="ov-sb">名古屋→桃園 14:30</div></div>
+    <div class="ovc"><div class="ov-ic">📋</div><div class="ov-lb">5/15 集合</div><div class="ov-vl">05:30</div><div class="ov-sb">桃園二航華航 7 號</div></div>
+    <div class="ovc"><div class="ov-ic">👨‍👩‍👧</div><div class="ov-lb">共同編輯</div><div class="ov-vl" style="font-size:11px;color:var(--grn)">同步中</div><div class="ov-sb">所有人看同份資料</div></div>
+  </div>
+  <div class="sdiv">住宿安排</div>
+  <div class="hrow"><div class="hrd">5/15</div><div><div class="hrn">Hotel MyStays Nagoya Nishiki</div><div class="hrc">📍 名古屋市中區錦 · <a href="tel:+81528552085">052-855-2085</a></div></div></div>
+  <div class="hrow"><div class="hrd">5/16</div><div><div class="hrn">黑部觀光飯店 Kurobe Kanko Hotel</div><div class="hrc">📍 長野縣大町市 · <a href="tel:+81261221520">0261-22-1520</a></div></div></div>
+  <div class="hrow"><div class="hrd">5/17</div><div><div class="hrn">Hotel MyStays Premier Kanazawa</div><div class="hrc">📍 石川縣金澤市廣岡 · <a href="tel:+81762905255">076-290-5255</a></div></div></div>
+  <div class="hrow"><div class="hrd">5/18</div><div><div class="hrn">ibis Styles Nagoya</div><div class="hrc">📍 名古屋市中村區名駅 · <a href="tel:+81525710571">052-571-0571</a></div></div></div>
+  <div class="sdiv">重要提醒</div>
+  <div class="tips"><strong>🧳 行李</strong>：託運 1 件 23kg・隨身 7kg・鋰電池限帶 2 個（飛行中禁充電）・液體 ≤100ml 透明夾鏈袋</div>
+  <div class="tips"><strong>🏔 立山裝備</strong>：第 3 天海拔 3000m，氣溫 0–8°C，請帶保暖外套、手套、圍巾</div>
+  <div class="tips"><strong>💴 小費</strong>：導遊・領隊・司機 每日 NT$300／人</div>
+</div>
+
+<!-- ═══ DAY PANELS (1-5) ═══ -->
+<!-- DAY 1 -->
+<div id="panel-d1" class="panel">
+  <div class="day-hdr"><div class="dbadge" style="background:var(--k)"><span class="dn">1</span><span class="dl">DAY ONE</span></div><div class="day-twrap"><h2>台北 → 名古屋<br>熱田神宮・名古屋城</h2><div class="day-dline">2026年5月15日（五）</div></div><div class="day-wx" id="dwx-d1">⏳</div></div>
+  <div id="tl-d1" class="tl-wrap"></div>
+  <div class="meals"><div class="mc"><span class="mc-i">🌅</span><span><span class="mc-t">早餐</span><span class="mc-n">家中</span></span></div><div class="mc"><span class="mc-i">✈</span><span><span class="mc-t">午餐</span><span class="mc-n">機上餐＋便當</span></span></div><div class="mc"><span class="mc-i">🍜</span><span><span class="mc-t">晚餐</span><span class="mc-n">自理・矢場とん推薦</span></span></div></div>
+  <div class="sdiv">今日景點</div>
+  <!-- Atsuta -->
+  <div class="sc" id="sc-atsuta"><div class="sc-hdr" onclick="toggleSpot('atsuta')"><div class="chk" onclick="toggleCheck(event,'sc-atsuta')">✓</div><div class="sico">⛩️</div><div class="sinf"><div class="sn">熱田神宮</div><div class="st">日本三大神宮 · 下車參觀</div></div><span class="eico">▾</span></div><div class="sb" id="sb-atsuta"><div class="sb-tabs"><button class="sbt active" onclick="sTb(event,'atsuta','info')">介紹</button><button class="sbt" onclick="sTb(event,'atsuta','nearby')">周邊</button><button class="sbt" onclick="sTb(event,'atsuta','note')">筆記</button></div><div id="st-atsuta-info" class="sbc active"><div class="sdesc">祭祀草薙神劍，千年歷史。境內6萬坪，千年大楠樹。可購御守、繪馬，宮きしめん就在境內。</div><div class="sl"><a class="lpp lpp-m" href="https://maps.google.com/?q=熱田神宮,名古屋" target="_blank">🧭 導航</a><a class="lpp lpp-w" href="https://zh.wikipedia.org/wiki/熱田神宮" target="_blank">📖 維基</a><a class="lpp lpp-o" href="https://www.atsutajingu.or.jp/" target="_blank">🌐 官網</a></div></div><div id="st-atsuta-nearby" class="sbc"><div class="ng"><a class="ni" href="https://maps.google.com/?q=宮きしめん+熱田神宮" target="_blank"><span class="ni-i">🍜</span><span class="ni-n">宮きしめん</span><span class="ni-c">境內名物・必吃</span></a><a class="ni" href="https://maps.google.com/?q=あつた蓬莱軒+本店" target="_blank"><span class="ni-i">🥡</span><span class="ni-n">蓬萊軒 本店</span><span class="ni-c">ひつまぶし名店</span></a><a class="ni" href="https://maps.google.com/?q=熱田神宮寶物館" target="_blank"><span class="ni-i">🏛</span><span class="ni-n">寶物館</span><span class="ni-c">典藏藝品</span></a></div></div><div id="st-atsuta-note" class="sbc"><textarea class="snote" id="sn-atsuta" placeholder="御守買了什麼？神宮的感受⋯" oninput="saveSpotNote('atsuta')"></textarea></div></div></div>
+  <!-- Nagoya Castle -->
+  <div class="sc" id="sc-nagoya-castle"><div class="sc-hdr" onclick="toggleSpot('nagoya-castle')"><div class="chk" onclick="toggleCheck(event,'sc-nagoya-castle')">✓</div><div class="sico">🏯</div><div class="sinf"><div class="sn">名古屋城・本丸御殿</div><div class="st">日本三大名城 · 入內參觀</div></div><span class="eico">▾</span></div><div class="sb" id="sb-nagoya-castle"><div class="sb-tabs"><button class="sbt active" onclick="sTb(event,'nagoya-castle','info')">介紹</button><button class="sbt" onclick="sTb(event,'nagoya-castle','nearby')">周邊・夜晚</button><button class="sbt" onclick="sTb(event,'nagoya-castle','note')">筆記</button></div><div id="st-nagoya-castle-info" class="sbc active"><div class="sdesc">1612年德川家康修造，金色鯱最具代表性。本丸御殿2018年完工，上洛殿金碧輝煌。⚠️ 天守施工中。</div><div class="sl"><a class="lpp lpp-m" href="https://maps.google.com/?q=名古屋城" target="_blank">🧭 導航</a><a class="lpp lpp-w" href="https://zh.wikipedia.org/wiki/名古屋城" target="_blank">📖 維基</a><a class="lpp lpp-o" href="https://www.nagoyajo.city.nagoya.jp/" target="_blank">🌐 官網</a></div></div><div id="st-nagoya-castle-nearby" class="sbc"><div style="font-size:10px;color:var(--kg);margin-bottom:6px;font-weight:500">🍽 餐廳 / 夜晚推薦</div><div class="ng"><a class="ni" href="https://maps.google.com/?q=矢場とん+名古屋矢場町本店" target="_blank"><span class="ni-i">🍖</span><span class="ni-n">矢場とん</span><span class="ni-c">味噌豬排・本店</span></a><a class="ni" href="https://maps.google.com/?q=世界の山ちゃん+名古屋" target="_blank"><span class="ni-i">🍗</span><span class="ni-n">山ちゃん手羽先</span><span class="ni-c">幻の炸雞翅</span></a><a class="ni" href="https://maps.google.com/?q=一蘭拉麵+名古屋" target="_blank"><span class="ni-i">🍜</span><span class="ni-n">一蘭拉麵</span><span class="ni-c">天然豚骨</span></a><a class="ni" href="https://maps.google.com/?q=獅子丸拉麵+名古屋" target="_blank"><span class="ni-i">🍜</span><span class="ni-n">獅子丸拉麵</span><span class="ni-c">名古屋名麵</span></a><a class="ni" href="https://maps.google.com/?q=HARBS+名古屋栄" target="_blank"><span class="ni-i">🍰</span><span class="ni-n">HARBS 蛋糕</span><span class="ni-c">水果千層</span></a><a class="ni" href="https://maps.google.com/?q=IEN+Bake+House+名古屋" target="_blank"><span class="ni-i">🥐</span><span class="ni-n">IEN Bake House</span><span class="ni-c">網紅麵包</span></a><a class="ni" href="https://maps.google.com/?q=Blue+Bottle+Coffee+名古屋" target="_blank"><span class="ni-i">☕</span><span class="ni-n">Blue Bottle</span><span class="ni-c">藍瓶咖啡</span></a><a class="ni" href="https://maps.google.com/?q=コメダ珈琲+名古屋" target="_blank"><span class="ni-i">☕</span><span class="ni-n">コメダ珈琲</span><span class="ni-c">小倉吐司早餐</span></a><a class="ni" href="https://maps.google.com/?q=松坂屋+名古屋本店" target="_blank"><span class="ni-i">🏬</span><span class="ni-n">松坂屋</span><span class="ni-c">B2食品・退稅</span></a><a class="ni" href="https://maps.google.com/?q=高島屋+名古屋" target="_blank"><span class="ni-i">🏬</span><span class="ni-n">高島屋</span><span class="ni-c">51F夜景</span></a><a class="ni" href="https://maps.google.com/?q=Don+Quijote+名古屋栄" target="_blank"><span class="ni-i">🛒</span><span class="ni-n">DON QUIJOTE</span><span class="ni-c">24H・藥妝</span></a><a class="ni" href="https://maps.google.com/?q=BicCamera+名古屋" target="_blank"><span class="ni-i">📱</span><span class="ni-n">BicCamera</span><span class="ni-c">家電・免稅</span></a></div></div><div id="st-nagoya-castle-note" class="sbc"><textarea class="snote" id="sn-nagoya-castle" placeholder="本丸御殿有多華麗⋯" oninput="saveSpotNote('nagoya-castle')"></textarea></div></div></div>
+  <div class="sdiv">今晚住宿</div>
+  <div class="hotel-card"><div class="hico">🏨</div><div class="hinf"><h3>Hotel MyStays Nagoya Nishiki</h3><p>〒460-0003 愛知県名古屋市中区錦3-8-21</p><div class="htel"><a href="tel:+81528552085">📞 052-855-2085</a><a href="https://maps.google.com/?q=Hotel+MyStays+Nagoya+Nishiki" target="_blank">🧭 導航</a></div></div></div>
+  <div class="sdiv">今日記錄</div>
+  <div style="font-size:10px;color:var(--kg);margin-bottom:4px">📝 今日日記</div>
+  <textarea class="note-ta" id="notes-d1" placeholder="記下今天的回憶⋯" oninput="autoSave('d1')"></textarea>
+  <div class="esec"><div class="etit">💴 今日花費</div><div class="erow"><input class="ein" id="ed-d1" placeholder="項目"><input class="eamt" id="ea-d1" type="number" placeholder="日幣¥"><button class="eadd" onclick="addExp('d1')">＋</button></div><div id="el-d1"></div><div class="etot" id="et-d1" style="display:none"><span>今日合計</span><span class="tyen"></span></div></div>
+</div>
+
+<!-- DAY 2 -->
+<div id="panel-d2" class="panel">
+  <div class="day-hdr"><div class="dbadge" style="background:var(--grn)"><span class="dn">2</span><span class="dl">DAY TWO</span></div><div class="day-twrap"><h2>飛驒高山・上三之町<br>神賜之地 ─ 上高地</h2><div class="day-dline">2026年5月16日（六）</div></div></div>
+  <div id="tl-d2" class="tl-wrap"></div>
+  <div class="meals"><div class="mc"><span class="mc-i">🍳</span><span><span class="mc-t">早餐</span><span class="mc-n">飯店早餐</span></span></div><div class="mc"><span class="mc-i">🥩</span><span><span class="mc-t">午餐</span><span class="mc-n">飛驒牛風味餐</span></span></div><div class="mc"><span class="mc-i">🦀</span><span><span class="mc-t">晚餐</span><span class="mc-n">螃蟹吃到飽 ⭐</span></span></div></div>
+  <div class="tips"><strong>⚠️</strong>：上高地 4/17–11/15 開放。旺季可能換環保接駁車。</div>
+  <div class="sdiv">今日景點</div>
+  <div class="sc" id="sc-sanmachi"><div class="sc-hdr" onclick="toggleSpot('sanmachi')"><div class="chk" onclick="toggleCheck(event,'sc-sanmachi')">✓</div><div class="sico">🏘️</div><div class="sinf"><div class="sn">飛驒高山・上三之町</div><div class="st">米其林三星 · 國家重要傳統建造物群</div></div><span class="eico">▾</span></div><div class="sb" id="sb-sanmachi"><div class="sb-tabs"><button class="sbt active" onclick="sTb(event,'sanmachi','info')">介紹</button><button class="sbt" onclick="sTb(event,'sanmachi','nearby')">周邊</button><button class="sbt" onclick="sTb(event,'sanmachi','note')">筆記</button></div><div id="st-sanmachi-info" class="sbc active"><div class="sdesc">「飛驒高山小京都」，百年江戶古街。飛驒牛握壽司、地酒試飲、猿寶寶（さるぼぼ）吊飾。</div><div class="sl"><a class="lpp lpp-m" href="https://maps.google.com/?q=上三之町+高山市" target="_blank">🧭 導航</a><a class="lpp lpp-o" href="https://www.hida.jp/chinese_t/" target="_blank">🌐 高山觀光</a></div></div><div id="st-sanmachi-nearby" class="sbc"><div class="ng"><a class="ni" href="https://maps.google.com/?q=飛驒牛握り寿司+高山上三之町" target="_blank"><span class="ni-i">🍣</span><span class="ni-n">飛驒牛握壽司</span><span class="ni-c">老街名物</span></a><a class="ni" href="https://maps.google.com/?q=高山拉麵+高山市" target="_blank"><span class="ni-i">🍜</span><span class="ni-n">高山拉麵</span><span class="ni-c">醬油系</span></a><a class="ni" href="https://maps.google.com/?q=Starbucks+飛驒高山" target="_blank"><span class="ni-i">☕</span><span class="ni-n">Starbucks 高山</span><span class="ni-c">古民家風</span></a><a class="ni" href="https://maps.google.com/?q=高山プリン亭" target="_blank"><span class="ni-i">🍮</span><span class="ni-n">高山プリン亭</span><span class="ni-c">飛驒牛乳布丁</span></a><a class="ni" href="https://maps.google.com/?q=陣屋前朝市+高山" target="_blank"><span class="ni-i">🌅</span><span class="ni-n">陣屋前朝市</span><span class="ni-c">7-12點・飛驒牛串</span></a><a class="ni" href="https://maps.google.com/?q=7-Eleven+高山" target="_blank"><span class="ni-i">🏪</span><span class="ni-n">7-Eleven</span><span class="ni-c">高山站前</span></a></div></div><div id="st-sanmachi-note" class="sbc"><textarea class="snote" id="sn-sanmachi" placeholder="買了什麼？哪家最特別⋯" oninput="saveSpotNote('sanmachi')"></textarea></div></div></div>
+  <div class="sc" id="sc-kamikochi"><div class="sc-hdr" onclick="toggleSpot('kamikochi')"><div class="chk" onclick="toggleCheck(event,'sc-kamikochi')">✓</div><div class="sico">🏔️</div><div class="sinf"><div class="sn">上高地</div><div class="st">中部山岳國立公園 · 標高約1500m</div></div><span class="eico">▾</span></div><div class="sb" id="sb-kamikochi"><div class="sb-tabs"><button class="sbt active" onclick="sTb(event,'kamikochi','info')">介紹</button><button class="sbt" onclick="sTb(event,'kamikochi','nearby')">周邊</button><button class="sbt" onclick="sTb(event,'kamikochi','note')">筆記</button></div><div id="st-kamikochi-info" class="sbc active"><div class="sdesc">被穗高連峰環抱的高山盆地，梓川清澈藍綠色。河童橋橫跨梓川，穗高倒映最佳攝影點。5月殘雪與嫩綠最美。</div><div class="sl"><a class="lpp lpp-m" href="https://maps.google.com/?q=上高地河童橋" target="_blank">🧭 河童橋</a><a class="lpp lpp-m" href="https://maps.google.com/?q=大正池+上高地" target="_blank">🧭 大正池</a><a class="lpp lpp-o" href="https://www.kamikochi.or.jp/tw/" target="_blank">🌐 官網</a></div></div><div id="st-kamikochi-nearby" class="sbc"><div class="ng"><a class="ni" href="https://maps.google.com/?q=帝国ホテル+上高地" target="_blank"><span class="ni-i">☕</span><span class="ni-n">帝國酒店 Lounge</span><span class="ni-c">百年老店咖啡</span></a><a class="ni" href="https://maps.google.com/?q=河童橋+上高地" target="_blank"><span class="ni-i">📸</span><span class="ni-n">河童橋</span><span class="ni-c">最佳拍照點</span></a><a class="ni" href="https://maps.google.com/?q=大正池+上高地" target="_blank"><span class="ni-i">🌊</span><span class="ni-n">大正池</span><span class="ni-c">枯木水景</span></a><a class="ni" href="https://maps.google.com/?q=上高地バスターミナル" target="_blank"><span class="ni-i">🛍</span><span class="ni-n">BT 賣店</span><span class="ni-c">紀念品輕食</span></a></div></div><div id="st-kamikochi-note" class="sbc"><textarea class="snote" id="sn-kamikochi" placeholder="河童橋的景色，空氣的味道⋯" oninput="saveSpotNote('kamikochi')"></textarea></div></div></div>
+  <div class="sdiv">今晚住宿</div>
+  <div class="hotel-card" style="background:linear-gradient(135deg,#1a2e1a,#2a3d2a)"><div class="hico">♨️</div><div class="hinf"><h3>黑部觀光飯店 Kurobe Kanko Hotel</h3><p>398-0001 長野県大町市平 2822</p><div class="htel"><a href="tel:+81261221520">📞 0261-22-1520</a><a href="https://maps.google.com/?q=黑部觀光飯店+大町市" target="_blank">🧭 導航</a></div></div></div>
+  <div class="sdiv">今日記錄</div>
+  <div style="font-size:10px;color:var(--kg);margin-bottom:4px">📝 今日日記</div>
+  <textarea class="note-ta" id="notes-d2" placeholder="高山的小店、上高地的景色、螃蟹有多好吃⋯" oninput="autoSave('d2')"></textarea>
+  <div class="esec"><div class="etit">💴 今日花費</div><div class="erow"><input class="ein" id="ed-d2" placeholder="項目"><input class="eamt" id="ea-d2" type="number" placeholder="日幣¥"><button class="eadd" onclick="addExp('d2')">＋</button></div><div id="el-d2"></div><div class="etot" id="et-d2" style="display:none"><span>今日合計</span><span class="tyen"></span></div></div>
+</div>
+
+<!-- DAY 3 -->
+<div id="panel-d3" class="panel">
+  <div class="day-hdr"><div class="dbadge" style="background:var(--blu)"><span class="dn">3</span><span class="dl">DAY THREE</span></div><div class="day-twrap"><h2>立山黑部阿爾卑斯路線<br>六種交通工具・雪之大谷</h2><div class="day-dline">2026年5月17日（日）</div></div></div>
+  <div id="tl-d3" class="tl-wrap"></div>
+  <div class="meals"><div class="mc"><span class="mc-i">🍳</span><span><span class="mc-t">早餐</span><span class="mc-n">飯店早餐</span></span></div><div class="mc"><span class="mc-i">🐟</span><span><span class="mc-t">午餐</span><span class="mc-n">立山鰻魚飯 ¥2500</span></span></div><div class="mc"><span class="mc-i">🍱</span><span><span class="mc-t">晚餐</span><span class="mc-n">日式御膳 ¥3000</span></span></div></div>
+  <div class="tips"><strong>🧥 必備</strong>：海拔 3000m，氣溫 0–5°C，手套圍巾保暖外套必帶。不吃鰻魚提前 7 天告知。</div>
+  <div class="sdiv">立山六段路線</div>
+  <div style="background:white;border:1px solid var(--bdl);border-radius:11px;padding:12px;margin-bottom:11px">
+    <div class="ts"><span class="ti">🚌</span><div><strong>扇澤→黑部水庫</strong>・關電隧道電氣巴士 6.1km・16分</div></div>
+    <div style="text-align:center;color:var(--bdr);font-size:12px;line-height:.9">│</div>
+    <div class="ts"><span class="ti">🚶</span><div><strong>黑部水庫 徒步</strong>・日本最高大壩 186m・15分</div></div>
+    <div style="text-align:center;color:var(--bdr);font-size:12px;line-height:.9">│</div>
+    <div class="ts"><span class="ti">🚞</span><div><strong>黑部湖→黑部平</strong>・地下纜車 0.8km・5分</div></div>
+    <div style="text-align:center;color:var(--bdr);font-size:12px;line-height:.9">│</div>
+    <div class="ts"><span class="ti">🚡</span><div><strong>黑部平→大觀峰</strong>・空中纜車 1.7km・7分（無支柱）</div></div>
+    <div style="text-align:center;color:var(--bdr);font-size:12px;line-height:.9">│</div>
+    <div class="ts"><span class="ti">🚌</span><div><strong>大觀峰→室堂</strong>・電氣巴士 3.7km・10分</div></div>
+    <div style="text-align:center;color:var(--bdr);font-size:12px;line-height:.9">│</div>
+    <div class="ts" style="background:linear-gradient(135deg,#e8f4e8,#d4ebd4);border:1px solid #b0d8b0"><span class="ti">❄️</span><div><strong style="color:var(--grn)">室堂 2450m ★ 雪之大谷 WALK・雪牆高達 20m！</strong></div></div>
+    <div style="text-align:center;color:var(--bdr);font-size:12px;line-height:.9">│</div>
+    <div class="ts"><span class="ti">🚌</span><div><strong>室堂→美女平</strong>・高原巴士 23km・50分</div></div>
+    <div style="text-align:center;color:var(--bdr);font-size:12px;line-height:.9">│</div>
+    <div class="ts"><span class="ti">🚠</span><div><strong>美女平→立山站</strong>・電動纜車 1.3km・7分</div></div>
+  </div>
+  <div class="sdiv">今日景點</div>
+  <div class="sc" id="sc-tateyama"><div class="sc-hdr" onclick="toggleSpot('tateyama')"><div class="chk" onclick="toggleCheck(event,'sc-tateyama')">✓</div><div class="sico">❄️</div><div class="sinf"><div class="sn">雪之大谷・室堂平</div><div class="st">4/15–6/25 期間限定 · 海拔2450m</div></div><span class="eico">▾</span></div><div class="sb" id="sb-tateyama"><div class="sb-tabs"><button class="sbt active" onclick="sTb(event,'tateyama','info')">介紹</button><button class="sbt" onclick="sTb(event,'tateyama','nearby')">今晚周邊（金澤）</button><button class="sbt" onclick="sTb(event,'tateyama','note')">筆記</button></div><div id="st-tateyama-info" class="sbc active"><div class="sdesc">立山三山聳立眼前，雪之大谷每年4月開山後人工鑿出道路，形成壯觀雪牆走廊高達20公尺。</div><div class="sl"><a class="lpp lpp-m" href="https://maps.google.com/?q=立山室堂" target="_blank">🧭 室堂</a><a class="lpp lpp-m" href="https://maps.google.com/?q=黑部水庫" target="_blank">🧭 黑部水庫</a><a class="lpp lpp-o" href="https://www.alpen-route.com/tw/" target="_blank">🌐 官網</a></div></div><div id="st-tateyama-nearby" class="sbc"><div class="ng"><a class="ni" href="https://maps.google.com/?q=近江町市場+金澤" target="_blank"><span class="ni-i">🐟</span><span class="ni-n">近江町市場</span><span class="ni-c">金澤廚房・海鮮丼</span></a><a class="ni" href="https://maps.google.com/maps?q=〒920-0035+Kanazawa,+Ishikawa,+Nakabashimachi+11-13" target="_blank"><span class="ni-i">🍜</span><span class="ni-n">麺屋達</span><span class="ni-c">中橋町11-13・昆布醬油</span></a><a class="ni" href="https://maps.google.com/?q=東山ひがし茶屋街+金澤" target="_blank"><span class="ni-i">🏮</span><span class="ni-n">東茶屋街</span><span class="ni-c">江戶藝妓街</span></a><a class="ni" href="https://maps.google.com/?q=甘納豆かわむら+金沢" target="_blank"><span class="ni-i">🍡</span><span class="ni-n">甘納豆かわむら</span><span class="ni-c">茶屋街名物</span></a><a class="ni" href="https://maps.google.com/?q=FORUS百貨+金澤駅" target="_blank"><span class="ni-i">🏬</span><span class="ni-n">FORUS 百貨</span><span class="ni-c">金澤站旁</span></a><a class="ni" href="https://maps.google.com/?q=金沢百番街" target="_blank"><span class="ni-i">🛍</span><span class="ni-n">金澤百番街</span><span class="ni-c">伴手禮・加賀棒茶</span></a><a class="ni" href="https://maps.google.com/?q=7-Eleven+金澤広岡" target="_blank"><span class="ni-i">🏪</span><span class="ni-n">7-Eleven 廣岡</span><span class="ni-c">飯店步行圈</span></a><a class="ni" href="https://maps.google.com/?q=片町飲食街+金澤" target="_blank"><span class="ni-i">🏮</span><span class="ni-n">片町飲食街</span><span class="ni-c">金澤最大夜晚飲食街</span></a></div></div><div id="st-tateyama-note" class="sbc"><textarea class="snote" id="sn-tateyama" placeholder="雪牆有多高？哪段交通最刺激？" oninput="saveSpotNote('tateyama')"></textarea></div></div></div>
+  <div class="sdiv">今晚住宿</div>
+  <div class="hotel-card" style="background:linear-gradient(135deg,#1a1e2e,#252d42)"><div class="hico">🏨</div><div class="hinf"><h3>Hotel MyStays Premier Kanazawa</h3><p>〒920-0031 石川縣金澤市廣岡2-13-5</p><div class="htel"><a href="tel:+81762905255">📞 076-290-5255</a><a href="https://maps.google.com/?q=Hotel+MyStays+Premier+Kanazawa" target="_blank">🧭 導航</a></div></div></div>
+  <div class="sdiv">今日記錄</div>
+  <div style="font-size:10px;color:var(--kg);margin-bottom:4px">📝 今日日記</div>
+  <textarea class="note-ta" id="notes-d3" placeholder="雪牆有多壯觀？哪段最刺激？" oninput="autoSave('d3')"></textarea>
+  <div class="esec"><div class="etit">💴 今日花費</div><div class="erow"><input class="ein" id="ed-d3" placeholder="項目"><input class="eamt" id="ea-d3" type="number" placeholder="日幣¥"><button class="eadd" onclick="addExp('d3')">＋</button></div><div id="el-d3"></div><div class="etot" id="et-d3" style="display:none"><span>今日合計</span><span class="tyen"></span></div></div>
+</div>
+
+<!-- DAY 4 -->
+<div id="panel-d4" class="panel">
+  <div class="day-hdr"><div class="dbadge" style="background:var(--warm)"><span class="dn">4</span><span class="dl">DAY FOUR</span></div><div class="day-twrap"><h2>金澤兼六園・白川鄉<br>名古屋自由夜訪</h2><div class="day-dline">2026年5月18日（一）</div></div></div>
+  <div id="tl-d4" class="tl-wrap"></div>
+  <div class="meals"><div class="mc"><span class="mc-i">🍳</span><span><span class="mc-t">早餐</span><span class="mc-n">飯店早餐</span></span></div><div class="mc"><span class="mc-i">🥩</span><span><span class="mc-t">午餐</span><span class="mc-name">朴葉味噌燒牛肉 ¥2500</span></span></div><div class="mc"><span class="mc-i">🍜</span><span><span class="mc-t">晚餐</span><span class="mc-n">自理・名古屋逛街</span></span></div></div>
+  <div class="sdiv">今日景點</div>
+  <div class="sc" id="sc-kenroku"><div class="sc-hdr" onclick="toggleSpot('kenroku')"><div class="chk" onclick="toggleCheck(event,'sc-kenroku')">✓</div><div class="sico">🌸</div><div class="sinf"><div class="sn">金澤兼六園</div><div class="st">日本三大名園・米其林三星・入內參觀</div></div><span class="eico">▾</span></div><div class="sb" id="sb-kenroku"><div class="sb-tabs"><button class="sbt active" onclick="sTb(event,'kenroku','info')">介紹</button><button class="sbt" onclick="sTb(event,'kenroku','nearby')">周邊</button><button class="sbt" onclick="sTb(event,'kenroku','note')">筆記</button></div><div id="st-kenroku-info" class="sbc active"><div class="sdesc">約3萬坪腹地耗時180年建成，兼具「宏大・幽邃・人力・蒼古・水泉・眺望」六勝。霞ヶ池・琴柱燈籠是代表景致。</div><div class="sl"><a class="lpp lpp-m" href="https://maps.google.com/?q=兼六園+金澤" target="_blank">🧭 導航</a><a class="lpp lpp-w" href="https://zh.wikipedia.org/wiki/兼六園" target="_blank">📖 維基</a><a class="lpp lpp-o" href="https://www.pref.ishikawa.jp/siro-niwa/kenrokuen/tw/" target="_blank">🌐 官網</a></div></div><div id="st-kenroku-nearby" class="sbc"><div class="ng"><a class="ni" href="https://maps.google.com/?q=金沢城公園" target="_blank"><span class="ni-i">🏯</span><span class="ni-n">金澤城公園</span><span class="ni-c">對面・免費</span></a><a class="ni" href="https://maps.google.com/?q=21世紀美術館+金澤" target="_blank"><span class="ni-i">🎨</span><span class="ni-n">21世紀美術館</span><span class="ni-c">游泳池裝置</span></a><a class="ni" href="https://maps.google.com/?q=近江町市場+金澤" target="_blank"><span class="ni-i">🐟</span><span class="ni-n">近江町市場</span><span class="ni-c">海鮮丼</span></a><a class="ni" href="https://maps.google.com/?q=Starbucks+金澤" target="_blank"><span class="ni-i">☕</span><span class="ni-n">Starbucks 金澤</span><span class="ni-c">百番街</span></a></div></div><div id="st-kenroku-note" class="sbc"><textarea class="snote" id="sn-kenroku" placeholder="琴柱燈籠、霞ヶ池⋯最美的角度？" oninput="saveSpotNote('kenroku')"></textarea></div></div></div>
+  <div class="sc" id="sc-shirakawa"><div class="sc-hdr" onclick="toggleSpot('shirakawa')"><div class="chk" onclick="toggleCheck(event,'sc-shirakawa')">✓</div><div class="sico">⛺</div><div class="sinf"><div class="sn">白川鄉合掌村</div><div class="st">世界文化遺產・米其林三星</div></div><span class="eico">▾</span></div><div class="sb" id="sb-shirakawa"><div class="sb-tabs"><button class="sbt active" onclick="sTb(event,'shirakawa','info')">介紹</button><button class="sbt" onclick="sTb(event,'shirakawa','nearby')">周邊</button><button class="sbt" onclick="sTb(event,'shirakawa','note')">筆記</button></div><div id="st-shirakawa-info" class="sbc active"><div class="sdesc">1995年列入世界遺產，茅草屋頂如雙手合掌。5月翠綠美麗。建議登荻町展望台（步行15分）俯瞰整村。</div><div class="sl"><a class="lpp lpp-m" href="https://maps.google.com/?q=白川郷荻町合掌集落" target="_blank">🧭 合掌村</a><a class="lpp lpp-m" href="https://maps.google.com/?q=荻町城跡展望台+白川郷" target="_blank">🧭 展望台</a><a class="lpp lpp-o" href="https://www.shirakawa-go.gr.jp/tw/" target="_blank">🌐 官網</a></div></div><div id="st-shirakawa-nearby" class="sbc"><div class="ng"><a class="ni" href="https://maps.google.com/?q=荻町城跡展望台+白川郷" target="_blank"><span class="ni-i">📸</span><span class="ni-n">荻町展望台</span><span class="ni-c">俯瞰整村</span></a><a class="ni" href="https://maps.google.com/?q=和田家+白川郷" target="_blank"><span class="ni-i">🏠</span><span class="ni-n">和田家</span><span class="ni-c">內部參觀¥300</span></a><a class="ni" href="https://maps.google.com/?q=白川郷バスターミナル" target="_blank"><span class="ni-i">🚌</span><span class="ni-n">合掌村 BT</span><span class="ni-c">集合點・紀念品</span></a></div></div><div id="st-shirakawa-note" class="sbc"><textarea class="snote" id="sn-shirakawa" placeholder="展望台的視野、合掌屋的樣子⋯" oninput="saveSpotNote('shirakawa')"></textarea></div></div></div>
+  <div class="sc" id="sc-nagoya-n"><div class="sc-hdr" onclick="toggleSpot('nagoya-n')"><div class="chk" onclick="toggleCheck(event,'sc-nagoya-n')">✓</div><div class="sico">🌃</div><div class="sinf"><div class="sn">名古屋自由夜訪</div><div class="st">榮町・名古屋車站商圈・最後購物夜</div></div><span class="eico">▾</span></div><div class="sb" id="sb-nagoya-n"><div class="sb-tabs"><button class="sbt active" onclick="sTb(event,'nagoya-n','food')">餐廳</button><button class="sbt" onclick="sTb(event,'nagoya-n','shop')">購物</button><button class="sbt" onclick="sTb(event,'nagoya-n','note')">筆記</button></div><div id="st-nagoya-n-food" class="sbc active"><div class="ng"><a class="ni" href="https://maps.google.com/?q=矢場とん+名古屋矢場町本店" target="_blank"><span class="ni-i">🍖</span><span class="ni-n">矢場とん</span><span class="ni-c">味噌豬排必吃</span></a><a class="ni" href="https://maps.google.com/?q=世界の山ちゃん+名古屋" target="_blank"><span class="ni-i">🍗</span><span class="ni-n">山ちゃん手羽先</span><span class="ni-c">幻の炸雞翅</span></a><a class="ni" href="https://maps.google.com/?q=一蘭+名古屋" target="_blank"><span class="ni-i">🍜</span><span class="ni-n">一蘭拉麵</span><span class="ni-c">天然豚骨</span></a><a class="ni" href="https://maps.google.com/?q=獅子丸拉麵+名古屋" target="_blank"><span class="ni-i">🍜</span><span class="ni-n">獅子丸拉麵</span><span class="ni-c">名古屋名麵</span></a><a class="ni" href="https://maps.google.com/?q=HARBS+名古屋栄" target="_blank"><span class="ni-i">🍰</span><span class="ni-n">HARBS 蛋糕</span><span class="ni-c">水果千層</span></a><a class="ni" href="https://maps.google.com/?q=IEN+Bake+House+名古屋" target="_blank"><span class="ni-i">🥐</span><span class="ni-n">IEN Bake House</span><span class="ni-c">網紅麵包</span></a><a class="ni" href="https://maps.google.com/?q=コメダ珈琲+名古屋" target="_blank"><span class="ni-i">☕</span><span class="ni-n">コメダ珈琲</span><span class="ni-c">小倉吐司</span></a><a class="ni" href="https://maps.google.com/?q=Starbucks+名古屋" target="_blank"><span class="ni-i">☕</span><span class="ni-n">Starbucks</span><span class="ni-c">名古屋各店</span></a><a class="ni" href="https://maps.google.com/?q=Blue+Bottle+Coffee+名古屋" target="_blank"><span class="ni-i">☕</span><span class="ni-n">Blue Bottle</span><span class="ni-c">藍瓶咖啡</span></a><a class="ni" href="https://maps.google.com/?q=山本屋本店+名古屋" target="_blank"><span class="ni-i">🍲</span><span class="ni-n">山本屋本店</span><span class="ni-c">味噌煮込</span></a></div></div><div id="st-nagoya-n-shop" class="sbc"><div class="ng"><a class="ni" href="https://maps.google.com/?q=松坂屋+名古屋本店" target="_blank"><span class="ni-i">🏬</span><span class="ni-n">松坂屋</span><span class="ni-c">B2食品</span></a><a class="ni" href="https://maps.google.com/?q=高島屋+名古屋" target="_blank"><span class="ni-i">🏬</span><span class="ni-n">高島屋</span><span class="ni-c">51F夜景</span></a><a class="ni" href="https://maps.google.com/?q=Don+Quijote+名古屋栄" target="_blank"><span class="ni-i">🛒</span><span class="ni-n">DON QUIJOTE</span><span class="ni-c">24H</span></a><a class="ni" href="https://maps.google.com/?q=BicCamera+名古屋" target="_blank"><span class="ni-i">📱</span><span class="ni-n">BicCamera</span><span class="ni-c">家電免稅</span></a><a class="ni" href="https://maps.google.com/?q=大須商店街+名古屋" target="_blank"><span class="ni-i">🛍</span><span class="ni-n">大須商店街</span><span class="ni-c">古著藥妝</span></a></div></div><div id="st-nagoya-n-note" class="sbc"><textarea class="snote" id="sn-nagoya-n" placeholder="晚上去哪？買了什麼？" oninput="saveSpotNote('nagoya-n')"></textarea></div></div></div>
+  <div class="sdiv">今晚住宿</div>
+  <div class="hotel-card" style="background:linear-gradient(135deg,#2a1a10,#3d2820)"><div class="hico">🏨</div><div class="hinf"><h3>ibis Styles Nagoya</h3><p>〒450-0002 愛知県名古屋市中村区名駅4丁目22-24</p><div class="htel"><a href="tel:+81525710571">📞 052-571-0571</a><a href="https://maps.google.com/?q=ibis+Styles+Nagoya+名駅" target="_blank">🧭 導航</a></div></div></div>
+  <div class="sdiv">今日記錄</div>
+  <div style="font-size:10px;color:var(--kg);margin-bottom:4px">📝 今日日記</div>
+  <textarea class="note-ta" id="notes-d4" placeholder="合掌村、兼六園、名古屋夜晚⋯" oninput="autoSave('d4')"></textarea>
+  <div class="esec"><div class="etit">💴 今日花費</div><div class="erow"><input class="ein" id="ed-d4" placeholder="項目"><input class="eamt" id="ea-d4" type="number" placeholder="日幣¥"><button class="eadd" onclick="addExp('d4')">＋</button></div><div id="el-d4"></div><div class="etot" id="et-d4" style="display:none"><span>今日合計</span><span class="tyen"></span></div></div>
+</div>
+
+<!-- DAY 5 -->
+<div id="panel-d5" class="panel">
+  <div class="day-hdr"><div class="dbadge" style="background:var(--gold)"><span class="dn">5</span><span class="dl">DAY FIVE</span></div><div class="day-twrap"><h2>名古屋中部機場<br>平安歸途・再見日本</h2><div class="day-dline">2026年5月19日（二）</div></div></div>
+  <div id="tl-d5" class="tl-wrap"></div>
+  <div class="fcard"><div class="froute"><span class="fcity">NGO</span><span class="farrow">──✈──</span><span class="fcity">TPE</span></div><div class="fmeta">中華航空 CI 155 ｜ 12:20 起飛 → 14:30 抵達桃園</div></div>
+  <div class="meals"><div class="mc"><span class="mc-i">🍳</span><span><span class="mc-t">早餐</span><span class="mc-n">飯店早餐</span></span></div><div class="mc"><span class="mc-i">✈</span><span><span class="mc-t">午餐</span><span class="mc-n">機上簡餐</span></span></div><div class="mc"><span class="mc-i">🏠</span><span><span class="mc-t">晚餐</span><span class="mc-n">回家吃好料！</span></span></div></div>
+  <div class="sdiv">✈ 名古屋中部機場採購指南</div>
+  <div class="az"><div class="az-t">🔒 過安檢前・3F＆4F（無退稅）</div><div class="az-r"><div class="az-i">🦐</div><div><strong>3F 蝦餅・土產區</strong><br>名古屋名物えびせんべい、各式土產・⚠️ 無免稅</div></div><div class="az-r"><div class="az-i">🍜</div><div><strong>3F 半藏製麵</strong><br>名古屋系拉麵・烏龍麵，候機前最後一餐</div></div><div class="az-r"><div class="az-i">🍱</div><div><strong>4F 餐廳街</strong><br>名古屋麵食、各式料理，窗邊可看飛機跑道</div></div></div>
+  <div class="az"><div class="az-t">✅ 過安檢後・免稅區（可退稅）</div><div class="az-r"><div class="az-i">🍡</div><div><strong>砂糖樹（さとうのき）</strong><br>機場限定精緻和菓子・送禮首選・可退稅</div></div><div class="az-r"><div class="az-i">🍰</div><div><strong>金琥燒（きんこ焼き）</strong><br>金鯱造型饅頭・機場限定・外國人必買</div></div><div class="az-r"><div class="az-i">🛒</div><div><strong>免稅商店</strong><br>化妝品・酒類・藥妝，持護照可退稅</div></div></div>
+  <div class="tips"><strong>💡 採購策略</strong>：蝦餅土產 → 安檢前 3F（無退稅）。砂糖樹・金琥燒・化妝品・酒類 → 安檢後免稅區（可退稅）。</div>
+  <div class="sdiv">旅程記錄</div>
+  <div style="font-size:10px;color:var(--kg);margin-bottom:4px">📝 五日旅程總結</div>
+  <textarea class="note-ta" id="notes-d5" placeholder="這趟旅行最美的一刻是⋯下次還要來嗎？" oninput="autoSave('d5')" style="min-height:90px"></textarea>
+  <div class="esec" style="background:linear-gradient(135deg,#1a1410,#2d2520);border:none;color:white;margin-top:8px"><div class="etit" style="color:var(--gold)">💴 五日總花費統計</div><div id="grand-total-list"></div></div>
+</div>
+
+<!-- ═══ DISCOVERY 景點庫 ═══ -->
+<div id="panel-disc" class="panel">
+  <div class="disc-wrap">
+    <div class="disc-search-row">
+      <div class="disc-srch"><input type="text" id="discSI" placeholder="搜尋景點、餐廳、拉麵⋯" oninput="discSearch()"><span class="disc-srch-ic">🔍</span></div>
+      <button class="disc-map-btn" id="discMapBtn" onclick="switchTab('overview')" title="回到總覽地圖">🗺 總覽地圖</button>
+    </div>
+    <div class="disc-cats" id="discCats"></div>
+    <div class="disc-body">
+      <div class="disc-lp" id="discLP"></div>
+      <div class="disc-rp" id="discRP"></div>
+    </div>
+    <div class="disc-cnt">顯示 <span id="discCnt">0</span> 筆 · <span style="font-size:.6rem;color:var(--dt3)">點左側城市展開</span></div>
+  </div>
+</div>
+
+<!-- ═══ INFO ═══ -->
+<div id="panel-info" class="panel">
+  <div style="font-family:'Shippori Mincho',serif;font-size:16px;font-weight:700;margin-bottom:12px">旅遊資訊</div>
+  <div class="isec"><div class="ist">📞 緊急聯絡</div><div class="irow"><span class="ilb">領隊</span>游鎧睿・<a href="tel:+886988478111">台 0988-478-111</a>・<a href="tel:+810705554898">日 070-5554-8989</a></div><div class="irow"><span class="ilb">桃園一航</span><a href="tel:0921809206">0921-809-206</a></div><div class="irow"><span class="ilb">桃園二航</span><a href="tel:0921809207">0921-809-207</a></div><div class="irow"><span class="ilb">緊急調度</span><a href="tel:0932365795">0932-365-795</a></div><div class="irow"><span class="ilb">華航客服</span><a href="tel:0033982451">03-398-2451</a></div></div>
+  <div class="isec"><div class="ist">☎ 撥號方式</div><div class="irow"><span class="ilb">日本→台灣</span>010 + 886 + 區域碼（去0）+ 號碼</div><div class="irow"><span class="ilb">台灣→日本</span>002 + 81 + 區域碼（去0）+ 號碼</div></div>
+  <div class="isec"><div class="ist">🛄 行李規定</div><div class="irow"><span class="ilb">託運</span>1件 23kg。刀具放大行李箱。</div><div class="irow"><span class="ilb">隨身</span>7kg。鋰電池限 2 個，飛行中禁充電。</div><div class="irow"><span class="ilb">液體</span>每瓶 ≤100ml，透明夾鏈袋，安檢時取出。</div></div>
+  <div class="isec"><div class="ist">♨️ 溫泉須知</div><div class="irow" style="flex-direction:column;gap:4px"><span>✦ 全裸入浴，不可穿泳裝</span><span>✦ 入浴前須先清洗身體</span><span>✦ 每次以 15 分鐘為限</span><span>✦ 空腹・飲酒後請勿入浴</span><span>✦ 有紋身者不可入大浴場</span></div></div>
+  <div class="isec"><div class="ist">💴 小費・其他</div><div class="irow">導遊・領隊・司機 每日 <strong>NT$ 300／人</strong></div><div class="irow"><span class="ilb">飯店</span>床頭不需放小費。迷你吧自取後至櫃台結帳（茶包免費）。</div></div>
+  <div class="isec"><div class="ist">🌤 五月天氣</div><div class="irow" style="flex-direction:column;gap:3px"><span>名古屋平地：15–22°C</span><span>飛驒高山：10–18°C</span><span>上高地（1500m）：8–15°C</span><span style="color:var(--red);font-weight:500">★ 立山室堂（2450m）：0–8°C，手套圍巾必備</span></div></div>
+  <!-- REMINDER SECTION -->
+  <div class="isec"><div class="ist">🔔 設定行程提醒</div>
+    <div style="padding:10px 12px">
+      <div style="font-size:10.5px;color:var(--ks);margin-bottom:8px">設定後，到時間瀏覽器會自動跳出提醒通知（需授予通知權限，部署到 HTTPS 後才有效）</div>
+      <div class="rem-bar">
+        <label>⏰ 時間</label>
+        <input type="time" class="rem-time-inp" id="remTime" value="07:00">
+        <input type="text" class="rem-msg-inp" id="remMsg" placeholder="提醒內容（如：Morning Call！集合出發）">
+        <button class="rem-add" onclick="addReminder()">＋ 新增</button>
+      </div>
+      <div class="rem-list" id="remList"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<nav class="bnav">
+  <button class="bb active" id="bn-overview" onclick="switchTab('overview')"><span class="bi">🗾</span>總覽</button>
+  <button class="bb" id="bn-tl" onclick="scrollToTL()"><span class="bi">⏰</span>時程</button>
+  <button class="bb" id="bn-disc" onclick="switchTab('disc')"><span class="bi">🗺</span>景點庫</button>
+  <button class="bb" id="bn-exp" onclick="scrollToExp()"><span class="bi">💴</span>記帳</button>
+  <button class="bb" id="bn-info" onclick="switchTab('info')"><span class="bi">ℹ</span>資訊</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+'use strict';
+// ═══════════════════════════════════
+//  SHARED STORAGE HELPERS
+// ═══════════════════════════════════
+const SHARED = true;
+const SK = {tl:'jp26_tl',chk:'jp26_chk',notes:'jp26_notes',sn:'jp26_sn',exp:'jp26_exp',rem:'jp26_rem'};
+
+async function sGet(k){try{const r=await window.storage.get(k,SHARED);return r?JSON.parse(r.value):null;}catch{return null;}}
+async function sSet(k,v){try{await window.storage.set(k,JSON.stringify(v),SHARED);return true;}catch{return false;}}
+
+// ═══════════════════════════════════
+//  STATE
+// ═══════════════════════════════════
+let curTab='overview';
+const expenses={d1:[],d2:[],d3:[],d4:[],d5:[]};
+let tlData={d1:[],d2:[],d3:[],d4:[],d5:[]};
+let reminders=[];
+let remTimers=[];
+
+// ═══════════════════════════════════
+//  SYNC STATUS
+// ═══════════════════════════════════
+function setSync(s){
+  const dot=document.getElementById('sdot'),txt=document.getElementById('syncTxt');
+  dot.className='sdot'+(s==='ok'?'':s==='err'?' err':' syncing');
+  txt.textContent=s==='ok'?'多人同步已啟動・資料即時共享':s==='sync'?'正在同步⋯':'同步離線・暫存本地';
+}
+
+// ═══════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════
+function showToast(m,dur=2000){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
+
+// ═══════════════════════════════════
+//  TAB
+// ═══════════════════════════════════
+function switchTab(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
+  const p=document.getElementById('panel-'+id);if(p)p.classList.add('active');
+  document.querySelectorAll('.tb').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+id+"'"))b.classList.add('active');});
+  curTab=id;
+  ['bn-overview','bn-disc','bn-info'].forEach(x=>document.getElementById(x)?.classList.remove('active'));
+  if(id==='overview')document.getElementById('bn-overview').classList.add('active');
+  if(id==='disc'){document.getElementById('bn-disc').classList.add('active');discRender();}
+  if(id==='info')document.getElementById('bn-info').classList.add('active');
+  if(id==='d5')renderGrandTotal();
+  // Re-init overview map if returning to overview (it may have been destroyed)
+  if(id==='overview'){setTimeout(()=>{if(!window._ovMap)initOvMap();},100);}
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══════════════════════════════════
+//  SPOT TOGGLE
+// ═══════════════════════════════════
+function toggleSpot(id){const c=document.getElementById('sc-'+id),b=document.getElementById('sb-'+id);if(!c||!b)return;c.classList.toggle('expanded');b.classList.toggle('open');}
+function toggleCheck(e,cardId){e.stopPropagation();const card=document.getElementById(cardId);if(card){card.classList.toggle('done');saveChecks();}}
+async function saveChecks(){const c={};document.querySelectorAll('.sc').forEach(card=>{c[card.id]=card.classList.contains('done');});localStorage.setItem(SK.chk,JSON.stringify(c));await sSet(SK.chk,c);}
+async function loadChecks(){let c=await sGet(SK.chk);if(!c){try{c=JSON.parse(localStorage.getItem(SK.chk)||'{}');}catch{c={};}}if(c)Object.entries(c).forEach(([id,done])=>{const el=document.getElementById(id);if(el&&done)el.classList.add('done');});}
+function sTb(e,sId,tabId){e.stopPropagation();const body=document.getElementById('sb-'+sId);if(!body)return;body.querySelectorAll('.sbt').forEach(b=>b.classList.remove('active'));body.querySelectorAll('.sbc').forEach(c=>c.classList.remove('active'));e.target.classList.add('active');const tc=document.getElementById('st-'+sId+'-'+tabId);if(tc)tc.classList.add('active');}
+
+// ═══════════════════════════════════
+//  SPOT NOTES
+// ═══════════════════════════════════
+async function saveSpotNote(id){const ta=document.getElementById('sn-'+id);if(!ta)return;const all=JSON.parse(localStorage.getItem(SK.sn)||'{}');all[id]=ta.value;localStorage.setItem(SK.sn,JSON.stringify(all));await sSet(SK.sn,all);}
+async function loadSpotNotes(){let all=await sGet(SK.sn);if(!all){try{all=JSON.parse(localStorage.getItem(SK.sn)||'{}');}catch{all={};}}if(all)Object.entries(all).forEach(([id,v])=>{const ta=document.getElementById('sn-'+id);if(ta)ta.value=v;});}
+
+// ═══════════════════════════════════
+//  DAY NOTES
+// ═══════════════════════════════════
+async function autoSave(day){const ta=document.getElementById('notes-'+day);if(!ta)return;const all=JSON.parse(localStorage.getItem(SK.notes)||'{}');all[day]=ta.value;localStorage.setItem(SK.notes,JSON.stringify(all));await sSet(SK.notes,all);}
+async function loadNotes(){let all=await sGet(SK.notes);if(!all){try{all=JSON.parse(localStorage.getItem(SK.notes)||'{}');}catch{all={};}}if(all)Object.entries(all).forEach(([day,v])=>{const ta=document.getElementById('notes-'+day);if(ta)ta.value=v;});}
+
+// ═══════════════════════════════════
+//  EXPENSES
+// ═══════════════════════════════════
+async function addExp(day){const desc=document.getElementById('ed-'+day).value.trim();const amt=parseInt(document.getElementById('ea-'+day).value);if(!desc||isNaN(amt)||amt<=0)return;expenses[day].push({desc,amt});document.getElementById('ed-'+day).value='';document.getElementById('ea-'+day).value='';renderExp(day);await saveExp();}
+async function delExp(day,idx){expenses[day].splice(idx,1);renderExp(day);await saveExp();}
+function renderExp(day){const list=document.getElementById('el-'+day),tot=document.getElementById('et-'+day);if(!list)return;list.innerHTML='';let total=0;expenses[day].forEach((item,i)=>{total+=item.amt;const row=document.createElement('div');row.className='eitem';row.innerHTML=`<span>${item.desc}</span><span>¥${item.amt.toLocaleString()} <button class="edel" onclick="delExp('${day}',${i})">✕</button></span>`;list.appendChild(row);});if(tot){if(expenses[day].length>0){tot.style.display='flex';tot.querySelector('.tyen').textContent='¥ '+total.toLocaleString();}else{tot.style.display='none';}}}
+async function saveExp(){localStorage.setItem(SK.exp,JSON.stringify(expenses));await sSet(SK.exp,expenses);}
+async function loadExp(){let d=await sGet(SK.exp);if(!d){try{d=JSON.parse(localStorage.getItem(SK.exp)||'{}');}catch{d={};}}if(d)Object.assign(expenses,d);['d1','d2','d3','d4','d5'].forEach(day=>renderExp(day));}
+function renderGrandTotal(){const c=document.getElementById('grand-total-list');if(!c)return;const labels={d1:'第1天 名古屋',d2:'第2天 高山·上高地',d3:'第3天 立山黑部',d4:'第4天 兼六·白川',d5:'第5天 回程'};let grand=0,html='';Object.entries(expenses).forEach(([day,items])=>{const sub=items.reduce((s,i)=>s+i.amt,0);grand+=sub;html+=`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.1);font-size:11px;color:rgba(245,240,232,.78)"><span>${labels[day]}</span><span style="color:var(--gold)">¥ ${sub.toLocaleString()}</span></div>`;});html+=`<div style="display:flex;justify-content:space-between;padding:11px 0 0;font-size:15px;font-family:'Shippori Mincho',serif;font-weight:700;color:white"><span>五日總計</span><span style="color:var(--gold)">¥ ${grand.toLocaleString()}</span></div>`;c.innerHTML=html;}
+
+// ═══════════════════════════════════
+//  TIMELINE (UP/DOWN BUTTONS)
+// ═══════════════════════════════════
+const DEFAULT_TL={
+  d1:[
+    {time:'05:30',label:'桃園機場集合',sub:'第二航廈 · 華航【7】號後方 · 帶護照',icon:'🛫',color:'#8b2020'},
+    {time:'07:30',label:'CI154 起飛',sub:'飛行時間約 2 小時 50 分',icon:'✈️',color:'#2c4a6e'},
+    {time:'11:20',label:'抵達名古屋中部機場',sub:'入境 · 領行李 · 搭車',icon:'🛬',color:'#4a6741'},
+    {time:'13:30',label:'熱田神宮 參觀',sub:'停留時間依導遊安排',icon:'⛩️',color:'#c4784a'},
+    {time:'15:30',label:'名古屋城・本丸御殿',sub:'停留時間依導遊安排',icon:'🏯',color:'#c4784a'},
+    {time:'18:00',label:'飯店 Check-in',sub:'Hotel MyStays Nagoya Nishiki',icon:'🏨',color:'#b8860b'},
+    {time:'19:00',label:'榮町・夜晚自由活動',sub:'晚餐自理・推薦矢場とん',icon:'🌃',color:'#6b5f57'}
+  ],
+  d2:[
+    {time:'07:00',label:'Morning Call 🔔',sub:'記得設鬧鐘備用',icon:'🔔',color:'#8b2020'},
+    {time:'07:30',label:'飯店早餐',sub:'',icon:'🍳',color:'#b8860b'},
+    {time:'08:30',label:'放行李至大廳 · 集合出發',sub:'確認行李牌 · 貴重物品隨身',icon:'🧳',color:'#c4784a'},
+    {time:'10:30',label:'飛驒高山 上三之町',sub:'停留時間依導遊安排',icon:'🏘️',color:'#c4784a'},
+    {time:'12:00',label:'午餐：飛驒牛風味餐',sub:'餐標 2500 日幣',icon:'🥩',color:'#b8860b'},
+    {time:'14:00',label:'上高地（大正池→河童橋）',sub:'停留時間依導遊安排',icon:'🏔️',color:'#2c4a6e'},
+    {time:'17:30',label:'集合出發長野溫泉鄉',sub:'視交通狀況調整',icon:'🚌',color:'#a09088'},
+    {time:'19:00',label:'晚餐：螃蟹吃到飽＋酒放題 🦀',sub:'今日亮點！',icon:'🦀',color:'#2a6460'},
+    {time:'21:00',label:'溫泉時光',sub:'每次 15 分鐘 · 有紋身不可入',icon:'♨️',color:'#2a6460'}
+  ],
+  d3:[
+    {time:'06:30',label:'Morning Call 🔔',sub:'今天是全程最早出發的一天',icon:'🔔',color:'#8b2020'},
+    {time:'07:00',label:'飯店早餐',sub:'吃飽吃好，山上氣候冷',icon:'🍳',color:'#b8860b'},
+    {time:'07:45',label:'放行李至大廳 · 集合出發',sub:'帶保暖衣物 · 手套 · 圍巾',icon:'🧳',color:'#c4784a'},
+    {time:'09:00',label:'扇澤→黑部水庫',sub:'關電隧道電氣巴士 16分',icon:'🚌',color:'#2c4a6e'},
+    {time:'11:00',label:'★ 室堂・雪之大谷 WALK',sub:'海拔 2450m · 20m 雪牆！',icon:'❄️',color:'#2c4a6e'},
+    {time:'12:30',label:'午餐：鰻魚飯風味餐',sub:'餐標 2500 日幣',icon:'🐟',color:'#b8860b'},
+    {time:'14:00',label:'室堂→美女平→立山站',sub:'高原巴士50分＋電動纜車7分',icon:'🚠',color:'#4a6741'},
+    {time:'18:00',label:'金澤飯店 Check-in',sub:'Hotel MyStays Premier Kanazawa',icon:'🏨',color:'#b8860b'},
+    {time:'19:30',label:'晚餐：日式御膳',sub:'餐標 3000 日幣',icon:'🍱',color:'#b8860b'}
+  ],
+  d4:[
+    {time:'07:00',label:'Morning Call 🔔',sub:'',icon:'🔔',color:'#8b2020'},
+    {time:'07:30',label:'飯店早餐',sub:'',icon:'🍳',color:'#b8860b'},
+    {time:'08:30',label:'放行李至大廳 · 退房出發',sub:'今日退房 · 行李送往名古屋',icon:'🧳',color:'#c4784a'},
+    {time:'09:00',label:'兼六園 入內參觀',sub:'停留時間依導遊安排',icon:'🌸',color:'#4a6741'},
+    {time:'12:30',label:'午餐：朴葉味噌燒牛肉',sub:'餐標 2500 日幣',icon:'🥩',color:'#b8860b'},
+    {time:'14:30',label:'白川鄉合掌村',sub:'停留時間依導遊安排',icon:'⛺',color:'#c4784a'},
+    {time:'16:30',label:'免稅店 採購',sub:'停留約 60 分',icon:'🛍️',color:'#a09088'},
+    {time:'19:00',label:'名古屋 ibis Styles Check-in',sub:'自由夜訪 · 晚餐自理',icon:'🌃',color:'#b8860b'}
+  ],
+  d5:[
+    {time:'07:00',label:'Morning Call 🔔',sub:'今天要準時！',icon:'🔔',color:'#8b2020'},
+    {time:'07:30',label:'飯店早餐',sub:'最後一次日本早餐',icon:'🍳',color:'#b8860b'},
+    {time:'08:30',label:'放行李至大廳 · Check-out',sub:'確認所有物品 · 護照 · 錢包',icon:'🧳',color:'#c4784a'},
+    {time:'09:30',label:'出發前往名古屋中部機場',sub:'セントレア · 車程約 40 分',icon:'🚌',color:'#2c4a6e'},
+    {time:'10:30',label:'機場報到 · 安檢',sub:'⚠️ 安檢前先逛 3F 蝦餅、4F 餐廳',icon:'🛂',color:'#2c4a6e'},
+    {time:'11:30',label:'過安檢後 免稅區採購',sub:'砂糖樹・金琥燒・退稅名產',icon:'🛍️',color:'#4a6741'},
+    {time:'12:20',label:'CI155 起飛 · 回家！',sub:'飛行時間約 3 小時 10 分',icon:'✈️',color:'#8b2020'},
+    {time:'14:30',label:'抵達桃園機場',sub:'領行李 · 入境 · 回到台灣！',icon:'🏠',color:'#4a6741'}
+  ]
+};
+
+function buildTimeline(day){
+  const wrap=document.getElementById('tl-'+day);if(!wrap)return;
+  const items=tlData[day]||[];wrap.innerHTML='';
+  const head=document.createElement('div');head.className='tl-head';
+  head.innerHTML=`<span class="tl-head-l">⏰ 今日時程 <span style="font-size:9px;color:var(--kg)">(點擊直接編輯・▲▼ 調整順序)</span></span>`;
+  const addBtn=document.createElement('button');addBtn.className='tl-add-btn';addBtn.textContent='＋ 新增項目';addBtn.onclick=()=>toggleAddForm(day);
+  head.appendChild(addBtn);wrap.appendChild(head);
+  items.forEach((item,idx)=>{wrap.appendChild(makeTLRow(day,item,idx,items.length));});
+  const form=document.createElement('div');form.className='tl-add-form';form.id='tl-form-'+day;
+  form.innerHTML=`<input class="tla tla-time" id="tla-time-${day}" type="time"><input class="tla tla-icon" id="tla-icon-${day}" placeholder="🔔" maxlength="2"><input class="tla tla-label" id="tla-label-${day}" placeholder="事項名稱"><input class="tla tla-sub" id="tla-sub-${day}" placeholder="備注（選填）"><button class="tla-ok" onclick="addTLItem('${day}')">確認</button><button class="tla-cancel" onclick="toggleAddForm('${day}')">取消</button>`;
+  wrap.appendChild(form);
+}
+
+function makeTLRow(day,item,idx,total){
+  const row=document.createElement('div');row.className='tl-item';row.dataset.idx=idx;
+  const mv=document.createElement('div');mv.className='tl-mv';
+  mv.innerHTML=`<button onclick="moveTL('${day}',${idx},-1)" ${idx===0?'disabled style="opacity:.25"':''} title="上移">▲</button><button onclick="moveTL('${day}',${idx},1)" ${idx===total-1?'disabled style="opacity:.25"':''} title="下移">▼</button>`;
+  row.appendChild(mv);
+  const timeDisp=item.time?fmtTime(item.time):'點擊設定';
+  row.innerHTML+=`<div class="tl-time-cell"><span class="tl-time-disp${item.time?'':' empty'}" id="td-${day}-${idx}">${timeDisp}</span><input class="tl-time-inp" type="time" value="${item.time||''}" onchange="updateTLTime('${day}',${idx},this.value)" title="點擊修改時間"></div><div class="tl-dot" style="background:${item.color||'#a09088'}"></div><div class="tl-text-cell"><input class="tl-label-inp" value="${item.label||''}" placeholder="事項名稱" onchange="updateTL('${day}',${idx},'label',this.value)"><input class="tl-sub-inp" value="${item.sub||''}" placeholder="備注" onchange="updateTL('${day}',${idx},'sub',this.value)"></div><input class="tl-icon-inp" value="${item.icon||''}" maxlength="2" onchange="updateTL('${day}',${idx},'icon',this.value)" title="改 emoji"><button class="tl-del" onclick="deleteTLItem('${day}',${idx})" title="刪除">✕</button>`;
+  // Re-attach mv buttons (innerHTML overwrote them)
+  row.insertBefore(mv,row.firstChild);
+  return row;
+}
+
+async function moveTL(day,idx,dir){
+  const arr=tlData[day];const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=arr.length)return;
+  [arr[idx],arr[newIdx]]=[arr[newIdx],arr[idx]];
+  buildTimeline(day);await saveTL();
+}
+
+function toggleAddForm(day){const f=document.getElementById('tl-form-'+day);f.classList.toggle('open');if(f.classList.contains('open'))document.getElementById('tla-time-'+day)?.focus();}
+
+async function addTLItem(day){
+  const timeRaw=document.getElementById('tla-time-'+day).value;
+  const time=timeRaw?timeRaw.slice(0,5):'??:??';
+  const icon=document.getElementById('tla-icon-'+day).value||'📌';
+  const label=document.getElementById('tla-label-'+day).value.trim();
+  const sub=document.getElementById('tla-sub-'+day).value.trim();
+  if(!label){showToast('請填入事項名稱');return;}
+  tlData[day].push({time,label,sub,icon,color:'#c4784a'});
+  tlData[day].sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  buildTimeline(day);await saveTL();showToast('✓ 已新增');
+}
+
+function fmtTime(t){if(!t||t==='??:??')return t||'';const[h,m]=t.split(':').map(Number);if(isNaN(h)||isNaN(m))return t;const ampm=h<12?'上午':'下午';const h12=h===0?12:h>12?h-12:h;return `${ampm}\n${h12}:${String(m).padStart(2,'0')}`;}
+
+async function updateTLTime(day,idx,val){
+  if(tlData[day][idx]){
+    const displayTime=val?val.slice(0,5):'';
+    tlData[day][idx].time=displayTime;
+    const disp=document.getElementById(`td-${day}-${idx}`);
+    if(disp){disp.textContent=fmtTime(displayTime)||'點擊設定';disp.className='tl-time-disp'+(displayTime?'':' empty');}
+    await saveTL();
+  }
+}
+
+async function updateTL(day,idx,field,val){
+  if(tlData[day][idx]){tlData[day][idx][field]=field==='time'?(val?val.slice(0,5):val):val;await saveTL();}}
+
+async function deleteTLItem(day,idx){tlData[day].splice(idx,1);buildTimeline(day);await saveTL();showToast('已刪除');}
+
+async function saveTL(){setSync('sync');localStorage.setItem(SK.tl,JSON.stringify(tlData));const ok=await sSet(SK.tl,tlData);setSync(ok?'ok':'err');}
+
+async function loadTL(){let d=await sGet(SK.tl);if(!d){try{d=JSON.parse(localStorage.getItem(SK.tl)||'null');}catch{d=null;}}if(d&&Object.keys(d).length>0){Object.assign(tlData,d);}else{Object.assign(tlData,DEFAULT_TL);}['d1','d2','d3','d4','d5'].forEach(day=>buildTimeline(day));}
+
+// ═══════════════════════════════════
+//  REMINDERS (Notification API)
+// ═══════════════════════════════════
+function requestNotif(){
+  if(!('Notification' in window)){showToast('此瀏覽器不支援通知功能');return;}
+  Notification.requestPermission().then(perm=>{
+    if(perm==='granted'){showToast('✓ 通知權限已開啟');document.getElementById('notifBtn').style.display='none';scheduleAll();}
+    else{showToast('❌ 通知權限被拒絕，請在瀏覽器設定中手動開啟');}
+  });
+}
+
+function checkNotifBtn(){
+  if(!('Notification' in window))return;
+  if(Notification.permission!=='granted'){document.getElementById('notifBtn').style.display='block';}
+}
+
+function scheduleAll(){
+  remTimers.forEach(t=>clearTimeout(t));remTimers=[];
+  reminders.forEach((r,i)=>{
+    const now=new Date();const[h,m]=r.time.split(':').map(Number);
+    const target=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,m,0);
+    let diff=target-now;if(diff<0)diff+=86400000; // next day
+    const t=setTimeout(()=>{
+      if(Notification.permission==='granted'){
+        new Notification('🗾 旅行提醒',{body:r.msg,icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⛩</text></svg>'});
+      }
+    },diff);
+    remTimers.push(t);
+  });
+}
+
+function addReminder(){
+  const time=document.getElementById('remTime').value;
+  const msg=document.getElementById('remMsg').value.trim();
+  if(!time||!msg){showToast('請填入時間和提醒內容');return;}
+  reminders.push({time,msg});saveReminders();renderReminders();scheduleAll();showToast('✓ 提醒已設定');
+  document.getElementById('remMsg').value='';
+}
+
+function deleteReminder(i){reminders.splice(i,1);saveReminders();renderReminders();scheduleAll();}
+
+function renderReminders(){
+  const list=document.getElementById('remList');if(!list)return;
+  if(!reminders.length){list.innerHTML='<div style="font-size:10.5px;color:var(--kg);padding:4px 0">尚無提醒設定</div>';return;}
+  list.innerHTML=reminders.map((r,i)=>`<div class="rem-item">🔔 <strong>${r.time}</strong>&nbsp;${r.msg}<button class="rem-del" onclick="deleteReminder(${i})">✕</button></div>`).join('');
+}
+
+async function saveReminders(){localStorage.setItem(SK.rem,JSON.stringify(reminders));await sSet(SK.rem,reminders);}
+async function loadReminders(){let d=await sGet(SK.rem);if(!d){try{d=JSON.parse(localStorage.getItem(SK.rem)||'[]');}catch{d=[];}}reminders=d||[];renderReminders();if(Notification.permission==='granted')scheduleAll();}
+
+// ═══════════════════════════════════
+//  DISCOVERY DB
+// ═══════════════════════════════════
+const DISC_CATS=[{id:'ALL',lb:'全部'},{id:'PLANNED',lb:'✦ 行程中'},{id:'景點',lb:'🏯 景點'},{id:'餐飲',lb:'🍜 餐飲'},{id:'咖啡甜點',lb:'☕ 咖啡甜點'},{id:'購物',lb:'🛍 購物'}];
+const DISC_SICO={'神社':'⛩','世界遺產':'🌏','自然景觀':'🌿','名園':'🌸','城堡':'🏯','展望台':'🔭','博物館':'🏛','市場':'🦞','免稅機場':'✈️','阿爾卑斯路線':'❄️','味噌豬排':'🐷','鰻魚飯':'🐟','拉麵':'🍜','壽司':'🍣','手羽先':'🍗','居酒屋':'🏮','飛驒牛':'🥩','和牛':'🥩','海鮮':'🦞','咖啡廳':'☕','百貨購物':'🏬','伴手禮':'🎁','藥妝':'💊','電器':'📱','商店街':'🛍','蛋糕甜點':'🍰','冰淇淋':'🍦','和菓子':'🍡','麵包':'🥐'};
+
+const DISC_DB={destinations:[
+{city:'名古屋',days:['D1','D4','D5'],color:'#C96A2A',emoji:'🌆',desc:'名古屋めし・金鯱・購物天堂',zones:[
+  {zone:'熱田・名古屋城',color:'#C96A2A',spots:[
+    {id:'n01',name_zh:'熱田神宮',name_jp:'熱田神宮',category:'景點',subcategory:'神社',day:'D1',already_planned:true,rating_google:4.6,price_range:'免費',price_note:'免費參拜',hours:'日出-日落',tips:'早晨人少氣氛最好，宮きしめん在境內必吃',must_try:['御守','宮きしめん'],gmaps:'熱田神宮 名古屋',highlight:'日本三大神宮・草薙神劍千年傳說',review:'林蔭深邃，氣氛莊嚴。宮きしめん就在境內，參拜後直接吃。'},
+    {id:'n02',name_zh:'名古屋城・本丸御殿',name_jp:'名古屋城',category:'景點',subcategory:'城堡',day:'D1',already_planned:true,rating_google:4.4,price_range:'¥',price_note:'入場¥500',hours:'9:00-16:30',closed:'12/29-1/1',gmaps:'名古屋城',highlight:'金鯱名城・本丸御殿江戶最高傑作',review:'本丸御殿2018年完工，金碧輝煌。天守施工中但本丸御殿非常值得入場。',tips:'本丸御殿是重點，天守施工中不能入內',must_try:['本丸御殿','金鯱全景']}
+  ]},
+  {zone:'榮町・大須・名古屋めし',color:'#7B6BA8',spots:[
+    {id:'n04',name_zh:'矢場とん（味噌豬排）',name_jp:'矢場とん 矢場町本店',category:'餐飲',subcategory:'味噌豬排',day:'D1/D4',already_planned:false,rating_google:4.4,price_range:'¥¥',price_note:'¥1,500-2,500',hours:'11:00-21:00',gmaps:'矢場とん 矢場町本店',highlight:'名古屋味噌豬排元祖・赤味噌醬汁・わらじとんかつ',review:'赤味噌醬汁濃郁甜香，草鞋形炸豬排超大份量。本店常態排隊1小時，值得等。',tips:'矢場町站有分店等待少，本店排隊要有心理準備',must_try:['わらじとんかつ','味噌豬排定食']},
+    {id:'n06',name_zh:'世界の山ちゃん（手羽先）',name_jp:'世界の山ちゃん 錦本店',category:'餐飲',subcategory:'手羽先',day:'D4晚',already_planned:false,rating_google:4.1,price_range:'¥',price_note:'¥110-130/隻',hours:'17:00-24:00',gmaps:'世界の山ちゃん 錦本店 名古屋',highlight:'名古屋幻の手羽先・胡椒辣版',review:'胡椒版比醬汁版更刺激，配生啤酒是名古屋夜晚標配。',tips:'配生啤酒是標配，胡椒版必試',must_try:['幻の手羽先']},
+    {id:'n07',name_zh:'HARBS 蛋糕',name_jp:'HARBS 栄店',category:'咖啡甜點',subcategory:'蛋糕甜點',day:'D1/D4',already_planned:false,rating_google:4.4,price_range:'¥¥',price_note:'¥1,200-1,800',hours:'11:00-20:00',gmaps:'HARBS 名古屋栄',highlight:'水果千層蛋糕・名古屋名店',review:'水果千層蛋糕奶油份量滿滿。午後點心時段建議提早入座。',tips:'水果千層必點',must_try:['水果千層蛋糕']},
+    {id:'n08',name_zh:'IEN Bake House',name_jp:'IEN Bake House',category:'咖啡甜點',subcategory:'麵包',day:'D1/D4',already_planned:false,rating_google:4.5,price_range:'¥¥',price_note:'麵包¥350-700',hours:'8:00-19:00',gmaps:'IEN Bake House 名古屋',highlight:'名古屋網紅麵包咖啡・天然酵母',review:'天然酵母麵包每天早烤，可頌外皮酥脆。',tips:'早上開店最新鮮',must_try:['天然酵母可頌']},
+    {id:'n09',name_zh:'Blue Bottle Coffee',name_jp:'Blue Bottle Coffee 名古屋',category:'咖啡甜點',subcategory:'咖啡廳',day:'D1/D4',already_planned:false,rating_google:4.3,price_range:'¥¥',price_note:'¥650-900',hours:'8:00-20:00',gmaps:'Blue Bottle Coffee 名古屋',highlight:'藍瓶咖啡名古屋店・精品咖啡',review:'精品咖啡愛好者必訪，每杯現磨現沖。',tips:'黑咖啡最能感受豆子風味',must_try:['單品手沖']},
+    {id:'n10',name_zh:"Tully's Coffee 榮",name_jp:"タリーズコーヒー 名古屋栄",category:'咖啡甜點',subcategory:'咖啡廳',day:'D1/D4',already_planned:false,rating_google:4.0,price_range:'¥',price_note:'¥450-650',hours:'7:00-22:00',gmaps:"Tully's Coffee 名古屋栄",highlight:'連鎖精品咖啡・榮町',review:'逛街途中補充咖啡因，外帶最方便。',tips:'外帶逛街效率最高',must_try:['拿鐵']},
+    {id:'n11',name_zh:'獅子丸拉麵',name_jp:'獅子丸 名古屋',category:'餐飲',subcategory:'拉麵',day:'D1/D4晚',already_planned:false,rating_google:4.2,price_range:'¥',price_note:'¥850-1,200',hours:'11:30-22:00',gmaps:'獅子丸 拉麵 名古屋',highlight:'名古屋拉麵名店・濃郁豬骨',review:'名古屋少見的濃郁拉麵，叉燒厚切入味。深夜也開，宵夜首選。',tips:'深夜場等待少',must_try:['叉燒拉麵']},
+    {id:'n12',name_zh:'一蘭拉麵',name_jp:'一蘭 名古屋',category:'餐飲',subcategory:'拉麵',day:'D1/D4晚',already_planned:false,rating_google:4.2,price_range:'¥¥',price_note:'¥980-1,400',hours:'10:00-04:00',gmaps:'一蘭拉麵 名古屋',highlight:'天然豚骨・隔板包廂',review:'個人隔板讓人專注品味，辣醬可調整。',tips:'辣醬第一次選普通',must_try:['拉麵（普通）']},
+    {id:'n13',name_zh:'コメダ珈琲',name_jp:'コメダ珈琲店',category:'咖啡甜點',subcategory:'咖啡廳',day:'D早',already_planned:false,rating_google:4.2,price_range:'¥',price_note:'咖啡¥490，モーニング免費',hours:'7:00-23:00',gmaps:'コメダ珈琲 名古屋',highlight:'名古屋モーニング・點咖啡附贈厚吐司',review:'早上點咖啡附贈厚蛋吐司，名古屋在地文化。',tips:'早7-11點モーニング',must_try:['小倉トースト']},
+    {id:'n14',name_zh:'松坂屋名古屋',name_jp:'松坂屋 名古屋',category:'購物',subcategory:'百貨購物',day:'D4晚/D5',already_planned:false,rating_google:4.2,price_range:'¥¥¥',price_note:'依各品牌',hours:'10:00-20:00',gmaps:'松坂屋 名古屋 栄',highlight:'榮地區旗艦百貨・B2地下食品・免稅',review:'B2食品可找到名古屋限定甜點。',tips:'B2土產齊全，最後採購好地方',must_try:['B2地下食品']},
+    {id:'n15',name_zh:'DON QUIJOTE 24H',name_jp:'ドン・キホーテ 名古屋',category:'購物',subcategory:'藥妝',day:'D1/D4晚',already_planned:false,rating_google:4.0,price_range:'¥',price_note:'依商品',hours:'24小時',gmaps:'Don Quijote 名古屋栄',highlight:'24H・藥妝零食伴手禮',review:'24小時不打烊，藥妝零食電器應有盡有。',tips:'24H所以不用趕',must_try:['藥妝','限定零食']}
+  ]},
+  {zone:'名古屋中部機場',color:'#3D6B8E',spots:[
+    {id:'n17',name_zh:'機場3F 蝦餅土產（安檢前・無退稅）',name_jp:'セントレア 3F 土産',category:'購物',subcategory:'免稅機場',day:'D5',already_planned:true,rating_google:4.2,price_range:'¥',price_note:'蝦餅¥500-2,000',hours:'6:30-20:00',gmaps:'中部国際空港 セントレア 3F',highlight:'⚠️ 安檢前・えびせんべい・無退稅',review:'安檢前3F有名古屋名物蝦餅、地方菓子。',tips:'⚠️ 無退稅！先買這裡，退稅商品等過安檢',must_try:['えびせんべい','外郎餅']},
+    {id:'n18',name_zh:'機場4F 半藏製麵（安檢前）',name_jp:'セントレア 4F 飲食',category:'餐飲',subcategory:'免稅機場',day:'D5',already_planned:true,rating_google:4.1,price_range:'¥¥',price_note:'套餐¥1,200-2,500',hours:'7:00-21:00',gmaps:'中部国際空港 セントレア 4F',highlight:'安檢前・半藏製麵・名古屋麵食',review:'半藏製麵的醬油拉麵和味噌麵是特色，可看飛機跑道。',tips:'窗邊座位提早去佔',must_try:['半藏醬油拉麵']},
+    {id:'n19',name_zh:'砂糖樹・金琥燒（安檢後・可退稅）',name_jp:'さとうのき・金鯱焼',category:'購物',subcategory:'免稅機場',day:'D5',already_planned:true,rating_google:4.5,price_range:'¥¥',price_note:'砂糖樹¥800-2,000',hours:'7:00-20:00',gmaps:'セントレア 免税店',highlight:'✅ 安檢後・可退稅・砂糖樹・金鯱燒',review:'砂糖樹精緻和菓子送禮首選，金琥燒是機場限定。兩者均可免稅。',tips:'✅ 過安檢後才買！可免稅退稅',must_try:['砂糖樹和菓子','金鯱燒']}
+  ]}
+]},
+{city:'飛驒高山',days:['D2'],color:'#C8922A',emoji:'🏘',desc:'飛驒牛故鄉・江戶古街・小京都',zones:[
+  {zone:'上三之町・老街',color:'#C96A2A',spots:[
+    {id:'h01',name_zh:'飛驒高山上三之町古街',name_jp:'飛騨高山古い町並',category:'景點',subcategory:'神社',day:'D2',already_planned:true,rating_google:4.6,price_range:'免費',price_note:'散策免費',hours:'自由參觀',gmaps:'飛騨高山 古い町並',highlight:'米其林三星・江戶百年古街',review:'黑色木格子建築連成一排。早9點前幾乎無人，各種飛驒特產都能找到。',tips:'早上9點前人極少',must_try:['飛驒牛串','飛驒工藝品']},
+    {id:'h02',name_zh:'飛驒牛握壽司（吉田屋）',name_jp:'飛騨牛握り 吉田屋',category:'餐飲',subcategory:'壽司',day:'D2',already_planned:false,rating_google:4.4,price_range:'¥¥',price_note:'¥500-800/貫',hours:'10:00-17:00',gmaps:'吉田屋 飛騨牛 高山 上三之町',highlight:'霜降飛驒牛握壽司・老街邊走邊吃',review:'霜降飛驒牛現點現捏，炙燒版香氣更濃。',tips:'現點現捏，炙燒版必試',must_try:['飛驒牛霜降握']},
+    {id:'h03',name_zh:'高山プリン亭',name_jp:'高山プリン亭',category:'咖啡甜點',subcategory:'冰淇淋',day:'D2',already_planned:false,rating_google:4.3,price_range:'¥',price_note:'¥400-600',hours:'10:00-17:00',gmaps:'高山プリン亭 高山',highlight:'飛驒牛乳布丁・老街散步甜點',review:'飛驒牛乳濃郁，布丁奶香濃厚。',tips:'復古玻璃瓶可帶走',must_try:['飛驒牛乳布丁']},
+    {id:'h05',name_zh:"Tully's Coffee 高山",name_jp:"タリーズコーヒー 高山",category:'咖啡甜點',subcategory:'咖啡廳',day:'D2',already_planned:false,rating_google:4.0,price_range:'¥',price_note:'¥450-620',hours:'7:00-21:00',gmaps:"Tully's Coffee 高山",highlight:'咖啡補給・高山市區',review:'逛古街途中的補給站。',tips:'外帶最方便',must_try:['拿鐵']}
+  ]}
+]},
+{city:'上高地',days:['D2'],color:'#5A8A6A',emoji:'🏔',desc:'日本Alps最美盆地・梓川',zones:[
+  {zone:'河童橋・梓川',color:'#5A8A6A',spots:[
+    {id:'k01',name_zh:'上高地・河童橋',name_jp:'上高地 河童橋',category:'景點',subcategory:'自然景觀',day:'D2',already_planned:true,rating_google:4.8,price_range:'¥¥',price_note:'巴士費約¥3,000',hours:'5月-11月開放',gmaps:'上高地河童橋',highlight:'穗高連峰倒映梓川・日本Alps最美',review:'5月殘雪配嫩綠是最佳季節。',tips:'早班巴士到達人少',must_try:['河童橋全景','梓川散步']},
+    {id:'k02',name_zh:'大正池',name_jp:'大正池',category:'景點',subcategory:'自然景觀',day:'D2',already_planned:false,rating_google:4.6,price_range:'¥¥',price_note:'含巴士費',hours:'全天',gmaps:'大正池 上高地',highlight:'燒岳噴發形成・藍色水面枯木',review:'早晨薄霧中最夢幻。',tips:'早晨最夢幻',must_try:['池面倒影']},
+    {id:'k03',name_zh:'帝國酒店 Lounge',name_jp:'上高地帝国ホテル',category:'咖啡甜點',subcategory:'咖啡廳',day:'D2',already_planned:false,rating_google:4.4,price_range:'¥¥¥',price_note:'下午茶¥2,000-4,000',hours:'7:00-21:00',gmaps:'帝国ホテル 上高地',highlight:'百年高山老店・梓川景觀絕佳',review:'在大自然中享受帝國酒店的咖啡是難忘體驗。',tips:'非住客可進Lounge',must_try:['景觀咖啡']}
+  ]}
+]},
+{city:'立山黑部',days:['D3'],color:'#3D6B8E',emoji:'❄️',desc:'雪之大谷・六種交通・2450m',zones:[
+  {zone:'Alpine Route・室堂',color:'#3D6B8E',spots:[
+    {id:'t01',name_zh:'雪之大谷 WALK',name_jp:'雪の大谷ウォーク',category:'景點',subcategory:'阿爾卑斯路線',day:'D3',already_planned:true,rating_google:4.9,price_range:'¥¥¥',price_note:'含Alpine Route套票',hours:'4/15-6/25',gmaps:'雪の大谷 室堂',highlight:'★ 4/15-6/25期間限定・20m雪牆',review:'站在20公尺高的雪牆旁感到人類渺小。帶顏色鮮艷外套拍照更搶眼。',tips:'早班出發雪壁最乾淨',must_try:['雪壁走廊','立山湧水']},
+    {id:'t02',name_zh:'室堂平展望',name_jp:'室堂平',category:'景點',subcategory:'阿爾卑斯路線',day:'D3',already_planned:true,rating_google:4.7,price_range:'¥¥¥',price_note:'含套票',hours:'依季節',gmaps:'室堂 立山',highlight:'海拔2450m・360度阿爾卑斯',review:'氣溫約0-5°C，保暖衣物必備，緩慢行走防高山反應。',tips:'保暖必備，緩步行走',must_try:['展望台']}
+  ]},
+  {zone:'今晚周邊（金澤）',color:'#C96A2A',spots:[
+    {id:'t04',name_zh:'近江町市場',name_jp:'近江町市場',category:'餐飲',subcategory:'市場',day:'D3晚',already_planned:false,rating_google:4.4,price_range:'¥¥',price_note:'海鮮蓋飯¥1,500-3,000',hours:'9:00-17:00',gmaps:'近江町市場 金沢',highlight:'金澤廚房・甘蝦・螢烏賊',review:'10點半前到可避開人潮。',tips:'10:30前到避開長龍',must_try:['海鮮丼','甘蝦']},
+    {id:'t05',name_zh:'麺屋達（拉麵達人）',name_jp:'麺屋達 金沢',category:'餐飲',subcategory:'拉麵',day:'D3晚',already_planned:false,rating_google:4.2,price_range:'¥',price_note:'拉麵¥900-1,200',hours:'11:00-22:00',gmaps:'麺屋達 金沢中橋町11-13',highlight:'金澤醬油系拉麵・昆布高湯底',review:'金澤風格醬油拉麵，昆布高湯底清爽鮮甜。夜間場等待少。',tips:'〒920-0035 金沢市中橋町11-13（正確地址）',must_try:['昆布醬油拉麵']}
+  ]}
+]},
+{city:'兼六園・金澤',days:['D4'],color:'#7B6BA8',emoji:'🌸',desc:'三大名園・北陸海鮮・金箔',zones:[
+  {zone:'兼六園・金澤城',color:'#5A8A6A',spots:[
+    {id:'g01',name_zh:'兼六園',name_jp:'兼六園',category:'景點',subcategory:'名園',day:'D4',already_planned:true,rating_google:4.6,price_range:'¥',price_note:'入場¥320',hours:'7:00-18:00',gmaps:'兼六園 金沢',highlight:'日本三大名園之首・米其林三星',review:'霞ヶ池倒影、琴柱燈籠最美。7點開園人最少。',tips:'早7點開園人最少',must_try:['霞ヶ池','琴柱燈籠']},
+    {id:'g02',name_zh:'金澤城公園',name_jp:'金沢城公園',category:'景點',subcategory:'城堡',day:'D4',already_planned:false,rating_google:4.4,price_range:'¥',price_note:'公園免費',hours:'7:00-18:00',gmaps:'金沢城公園',highlight:'前田藩百萬石居城',review:'兼六園旁邊順路。',tips:'兼六園和金澤城共用入口',must_try:['石川門']},
+    {id:'g03',name_zh:'21世紀美術館',name_jp:'21世紀美術館',category:'景點',subcategory:'博物館',day:'D4',already_planned:false,rating_google:4.5,price_range:'¥',price_note:'企劃展¥1,000-1,500',hours:'10:00-18:00',closed:'週一',gmaps:'金沢21世紀美術館',highlight:'游泳池裝置藝術全球打卡聖地',review:'游泳池需買票，外圍廣場免費。',tips:'游泳池需購票',must_try:['游泳池裝置']}
+  ]},
+  {zone:'白川鄉',color:'#C8922A',spots:[
+    {id:'g04',name_zh:'白川鄉合掌村',name_jp:'白川郷荻町集落',category:'景點',subcategory:'世界遺產',day:'D4',already_planned:true,rating_google:4.7,price_range:'¥',price_note:'入村免費',hours:'和田家9:00-17:00',gmaps:'白川郷 荻町合掌集落',highlight:'世界文化遺產・米其林三星・5月鮮綠',review:'午前11點前人少，建議登展望台。',tips:'午前人少，展望台俯瞰全村必去',must_try:['荻町展望台','和田家內部']},
+    {id:'g05',name_zh:'荻町城跡展望台',name_jp:'荻町城跡展望台',category:'景點',subcategory:'展望台',day:'D4',already_planned:false,rating_google:4.6,price_range:'免費',price_note:'免費',hours:'全天',gmaps:'荻町城跡展望台 白川郷',highlight:'俯瞰整個合掌村最佳角度',review:'步行上山15分，從展望台看下去是教科書圖片角度。',tips:'步行15分，清晨光線最美',must_try:['全村俯瞰']}
+  ]},
+  {zone:'名古屋晚餐・購物',color:'#C96A2A',spots:[
+    {id:'g07',name_zh:'矢場とん 最後一晚',name_jp:'矢場とん',category:'餐飲',subcategory:'味噌豬排',day:'D4晚',already_planned:false,rating_google:4.4,price_range:'¥¥',price_note:'¥1,500-2,500',hours:'11:00-21:00',gmaps:'矢場とん 矢場町本店',highlight:'最後機會的名古屋名物',review:'如果D1沒去，D4是最後機會。',tips:'本店排隊長，矢場町站分店等待少',must_try:['わらじとんかつ']},
+    {id:'g08',name_zh:'HARBS 蛋糕 最後甜點',name_jp:'HARBS 名古屋',category:'咖啡甜點',subcategory:'蛋糕甜點',day:'D4晚',already_planned:false,rating_google:4.4,price_range:'¥¥',price_note:'¥1,200-1,800',hours:'11:00-20:00',gmaps:'HARBS 名古屋栄',highlight:'最後一晚甜點時光',review:'行程最後一晚的水果千層，最美好的收尾。',tips:'今晚好好品嚐',must_try:['水果千層蛋糕']},
+    {id:'g09',name_zh:'DON QUIJOTE 最後掃貨',name_jp:'ドン・キホーテ',category:'購物',subcategory:'藥妝',day:'D4晚',already_planned:false,rating_google:4.0,price_range:'¥',price_note:'依商品',hours:'24小時',gmaps:'Don Quijote 名古屋栄',highlight:'24H・最後掃貨',review:'24小時，把清單遺漏的補齊。',tips:'24H不急，一次補齊',must_try:['藥妝','限定零食']}
+  ]}
+]}
+]};
+
+// ═══════════════════════════════════
+//  DISCOVERY STATE & FUNCTIONS
+// ═══════════════════════════════════
+let dCityS='ALL',dZoneS=null,dCatS='ALL',dQ='',dOpenId=null,dShowMap=false;
+
+function discAllSpots(){const arr=[];DISC_DB.destinations.forEach(d=>{d.zones.forEach(z=>{z.spots.forEach(s=>{arr.push({s,city:d.city,cc:d.color,zone:z.zone,zc:z.color,days:d.days,emoji:d.emoji,desc:d.desc});});});});return arr;}
+
+function discFilt(){let all=discAllSpots();if(dCityS!=='ALL')all=all.filter(x=>x.city===dCityS);if(dZoneS)all=all.filter(x=>x.zone===dZoneS);if(dCatS==='PLANNED')all=all.filter(x=>x.s.already_planned);else if(dCatS!=='ALL')all=all.filter(x=>x.s.category===dCatS);if(dQ)all=all.filter(x=>{const t=(x.s.name_zh+x.s.name_jp+(x.s.subcategory||'')+(x.s.highlight||'')+(x.s.review||'')+(x.s.must_try||[]).join('')+(x.s.tips||'')).toLowerCase();return t.includes(dQ);});return all;}
+
+function discInit(){
+  // Cats
+  document.getElementById('discCats').innerHTML=DISC_CATS.map(c=>`<button class="dcat${c.id==='ALL'?' on':''}" id="dcat-${c.id}" onclick="discSetCat('${c.id}')">${c.lb}</button>`).join('');
+  discBuildLP();discRender();
+}
+
+function discSetCat(c){dCatS=c;document.querySelectorAll('.dcat').forEach(b=>b.classList.remove('on'));const b=document.getElementById('dcat-'+c);if(b)b.classList.add('on');dOpenId=null;discBuildLP();discRender();}
+function discSetCity(c){dCityS=c;dZoneS=null;dOpenId=null;discBuildLP();discRender();}
+function discSetZone(z){dZoneS=dZoneS===z?null:z;dOpenId=null;discBuildLP();discRender();}
+function discSearch(){dQ=(document.getElementById('discSI').value||'').toLowerCase().trim();if(dQ){dCityS='ALL';dZoneS=null;}dOpenId=null;discBuildLP();discRender();}
+function discToggleMap(){switchTab('overview');}// Map is now on overview page
+
+function discBuildLP(){
+  let h=`<button class="dlp-all${dCityS==='ALL'?' on':''}" onclick="discSetCity('ALL')">🗾<br><span style="font-size:.54rem">全部</span></button>`;
+  DISC_DB.destinations.forEach(d=>{
+    const cnt=d.zones.reduce((s,z)=>s+z.spots.length,0);const isOn=dCityS===d.city;
+    h+=`<button class="dcb${isOn?' on':''}" onclick="discSetCity('${d.city}')"><div class="dcb-inner"><span class="dcb-em">${d.emoji}</span><span class="dcb-nm">${d.city}</span><span class="dcb-dy">${(d.days||[]).join('・')}</span></div><span class="dcb-ct">${cnt}個</span>`;
+    if(isOn){h+='<div class="dcb-zones">';d.zones.forEach(z=>{const isZ=dZoneS===z.zone;const zc=dCatS==='ALL'?z.spots.length:dCatS==='PLANNED'?z.spots.filter(s=>s.already_planned).length:z.spots.filter(s=>s.category===dCatS).length;if(!zc)return;h+=`<button class="dzb${isZ?' on':''}" onclick="event.stopPropagation();discSetZone('${z.zone.replace(/'/g,"&apos;")}')" style="border-left-color:${isZ?z.color:'transparent'}">${z.zone}<span class="dzb-c">${zc}個</span></button>`;});h+='</div>';}
+    h+='</button>';
+  });
+  document.getElementById('discLP').innerHTML=h;
+}
+
+function discRender(){
+  const f=discFilt();document.getElementById('discCnt').textContent=f.length;
+  if(dQ){if(!f.length){setDiscRP('<div class="d-empty">🔍 找不到「'+dQ+'」</div>');return;}let h=`<div class="d-res-hd">搜尋「${dQ}」・${f.length}筆</div>`;f.forEach(x=>h+=discSHTML(x.s,x.zc));setDiscRP(h);return;}
+  if(dCityS==='ALL'){
+    if(dCatS!=='ALL'){if(!f.length){setDiscRP('<div class="d-empty">暫無符合項目</div>');return;}let h=`<div class="d-res-hd">${dCatS}・${f.length}筆</div>`;let lc='';f.forEach(x=>{if(x.city!==lc){h+=`<div class="dzh" style="background:${x.cc}">${x.emoji} ${x.city}<span class="dzh-cnt">${f.filter(y=>y.city===x.city).length}</span></div>`;lc=x.city;}h+=discSHTML(x.s,x.zc);});setDiscRP(h);return;}
+    let h='';
+    DISC_DB.destinations.forEach(d=>{
+      const dAll=discAllSpots().filter(x=>x.city===d.city);const pCnt=dAll.filter(x=>x.s.already_planned).length;
+      h+=`<div class="d-ov" style="border-left-color:${d.color}"><div class="d-ov-top"><span style="font-size:1rem">${d.emoji}</span><span class="d-ov-nm">${d.city}</span></div><div class="d-ov-desc">${d.desc}</div><div class="d-ov-pills"><span class="d-pill">${dAll.length}個地點</span>${pCnt?`<span class="d-pill">✦ ${pCnt}行程中</span>`:''}<span class="d-pill">${d.days.join('・')}</span><span class="d-pill go" onclick="discSetCity('${d.city}')">展開 →</span></div></div>`;
+      dAll.slice(0,2).forEach(x=>h+=discSHTML(x.s,x.zc));
+      if(dAll.length>2)h+=`<div style="padding:5px 11px;font-size:.61rem;color:var(--dai);background:var(--dw2);border-bottom:1px solid var(--dbd);cursor:pointer" onclick="discSetCity('${d.city}')">＋ 另有 ${dAll.length-2} 個地點 →</div>`;
+    });
+    setDiscRP(h||'<div class="d-empty">暫無項目</div>');return;
+  }
+  const dest=DISC_DB.destinations.find(d=>d.city===dCityS);if(!dest){setDiscRP('');return;}
+  let h='';
+  dest.zones.forEach(z=>{
+    if(dZoneS&&dZoneS!==z.zone)return;
+    const zf=z.spots.filter(s=>dCatS==='ALL'||(dCatS==='PLANNED'?s.already_planned:s.category===dCatS));
+    if(!zf.length)return;
+    h+=`<div class="dzh" style="background:${z.color}">${z.zone}<span class="dzh-cnt">${zf.length}</span></div>`;
+    zf.forEach(s=>h+=discSHTML(s,z.color));
+  });
+  setDiscRP(h||'<div class="d-empty">此篩選暫無結果</div>');
+}
+
+function setDiscRP(h){document.getElementById('discRP').innerHTML=h;}
+
+function discSHTML(s,zc){
+  const ico=DISC_SICO[s.subcategory]||(s.category==='景點'?'🏯':s.category==='餐飲'?'🍜':s.category==='咖啡甜點'?'☕':'🛍');
+  const rg=s.rating_google?`<span class="ds-rg">★${s.rating_google}</span>`:'';
+  const open=dOpenId===s.id;
+  return `<div id="dsp-${s.id}" class="dspot" onclick="discTog('${s.id}')"><div class="ds-ico">${ico}</div><div class="ds-main"><div class="ds-top"><div><div class="ds-nm">${s.name_zh}</div><div class="ds-jp">${s.name_jp}</div></div><div class="ds-rt">${rg}${s.price_range?`<span class="ds-pr">${s.price_range}</span>`:''}${s.already_planned?'<span class="ds-pl">✦行程中</span>':''}${s.day?`<span class="ds-day">${s.day}</span>`:''}</div></div><div class="ds-hl">${s.highlight}</div><div class="ds-tags"><span class="dtag ${s.category}">${s.category}</span><span class="dtag">${s.subcategory}</span></div></div></div><div id="ddr-${s.id}" class="d-drawer${open?' open':''}">${s.review?`<div class="d-rev">${s.review}</div>`:''}${s.price_note?`<div class="d-row"><span class="d-lbl">💰費用</span><span class="d-val">${s.price_note}</span></div>`:''}${s.hours?`<div class="d-row"><span class="d-lbl">🕐時間</span><span class="d-val">${s.hours}${s.closed?'・休'+s.closed:''}</span></div>`:''}${s.tips?`<div class="d-row"><span class="d-lbl">💡提示</span><span class="d-val">${s.tips}</span></div>`:''}${s.must_try?.length?`<div class="d-row"><span class="d-lbl">🌟必試</span><div class="d-val"><div class="d-must">${s.must_try.map(m=>`<span class="d-mi">${m}</span>`).join('')}</div></div></div>`:''}<div class="d-btns"><a href="https://maps.google.com/?q=${encodeURIComponent(s.gmaps||s.name_jp)}" target="_blank" class="ddb mp">🗺 Google Maps</a><a href="https://www.google.com/search?q=${encodeURIComponent(s.name_zh+' '+s.name_jp)}" target="_blank" class="ddb wb">🔍 搜尋詳情</a></div></div>`;
+}
+
+function discTog(id){dOpenId=dOpenId===id?null:id;document.querySelectorAll('.d-drawer').forEach(el=>el.classList.remove('open'));if(dOpenId){const dr=document.getElementById('ddr-'+id);if(dr){dr.classList.add('open');setTimeout(()=>dr.scrollIntoView({behavior:'smooth',block:'nearest'}),40);}}}
+
+// ═══════════════════════════════════
+//  LEAFLET MAP
+// ═══════════════════════════════════
+const CITY_LATLNG={'名古屋':[35.170,136.906],'飛驒高山':[36.146,137.252],'上高地':[36.243,137.632],'立山黑部':[36.577,137.523],'兼六園・金澤':[36.561,136.656]};
+
+function discBuildMapHTML(){
+  const cities=DISC_DB.destinations;
+  const counts={};cities.forEach(d=>{counts[d.city]=d.zones.reduce((s,z)=>s+z.spots.length,0);});
+  let legH='<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:7px">';
+  cities.forEach(d=>{legH+=`<div onclick="discSetCity('${d.city}')" style="display:flex;align-items:center;gap:3px;font-size:.58rem;background:#fff;border:1px solid ${d.color}30;border-radius:7px;padding:3px 6px;cursor:pointer;color:#5A4535"><span style="width:7px;height:7px;border-radius:50%;background:${d.color};display:inline-block;flex-shrink:0"></span>${d.emoji} ${d.city}<strong style="color:${d.color}"> ${counts[d.city]}</strong></div>`;});
+  legH+='</div>';
+
+  setTimeout(()=>{
+    if(window._leafMap){window._leafMap.remove();window._leafMap=null;}
+    const container=document.getElementById('leafletMap');if(!container)return;
+    const map=L.map('leafletMap',{center:[36.0,137.2],zoom:7,zoomControl:true,attributionControl:false,scrollWheelZoom:true});
+    window._leafMap=map;
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:12,minZoom:6}).addTo(map);
+    L.control.attribution({prefix:false}).addTo(map);
+    map.attributionControl.addAttribution('© <a href="https://www.openstreetmap.org/copyright">OSM</a>');
+    const lyrBus=L.layerGroup().addTo(map),lyrTime=L.layerGroup().addTo(map);
+    window._mapLayers={bus:lyrBus,time:lyrTime};
+    // Routes
+    L.polyline([[35.170,136.906],[36.146,137.252]],{color:'#C07020',weight:2.5,opacity:.85,dashArray:'8 4'}).addTo(lyrBus);
+    L.polyline([[36.146,137.252],[36.243,137.632]],{color:'#5A8A6A',weight:2,opacity:.8,dashArray:'6 4'}).addTo(lyrBus);
+    L.polyline([[36.146,137.252],[36.577,137.523]],{color:'#3D6B8E',weight:2.5,opacity:.85,dashArray:'8 4'}).addTo(lyrBus);
+    L.polyline([[36.577,137.523],[36.561,136.656]],{color:'#3D6B8E',weight:2.5,opacity:.85,dashArray:'8 4'}).addTo(lyrBus);
+    L.polyline([[36.561,136.656],[36.257,136.905],[35.170,136.906]],{color:'#7B6BA8',weight:2,opacity:.8,dashArray:'6 4'}).addTo(lyrBus);
+    // Time labels
+    function tL(lat,lon,txt,bg,fc){return L.marker([lat,lon],{icon:L.divIcon({className:'',html:`<div style="background:${bg};color:${fc};border-radius:4px;padding:2px 5px;font-size:9px;font-family:serif;font-weight:700;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.15)">${txt}</div>`,iconAnchor:[0,8]}),interactive:false});}
+    tL(35.65,137.08,'高速 ≈2.5h','rgba(255,234,190,.95)','#884010').addTo(lyrTime);
+    tL(36.19,137.44,'巴士 ≈1h','rgba(200,240,200,.95)','#2A6040').addTo(lyrTime);
+    tL(36.36,137.39,'巴士 ≈2h','rgba(180,210,240,.95)','#1A4880').addTo(lyrTime);
+    tL(36.57,137.08,'巴士 ≈1h','rgba(180,210,240,.95)','#1A4880').addTo(lyrTime);
+    tL(36.25,136.78,'高速 ≈2.5h','rgba(220,210,240,.95)','#4A3890').addTo(lyrTime);
+    // Airport
+    L.marker([34.858,136.805],{icon:L.divIcon({className:'',html:'<div style="background:#1A4898;color:#fff;border-radius:5px;padding:2px 5px;font-size:9px;font-weight:700;font-family:serif;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3)">✈ NGO</div>',iconAnchor:[20,11]}),interactive:false}).addTo(map);
+    // City circles
+    cities.forEach(d=>{
+      const ll=CITY_LATLNG[d.city];if(!ll)return;
+      const cnt=counts[d.city]||0;const r=cnt>=15?18:cnt>=10?16:14;const sz=r*2;
+      const icon=L.divIcon({className:'',html:`<div class="city-marker" style="width:${sz}px;height:${sz}px;background:${d.color}">${cnt}</div>`,iconSize:[sz,sz],iconAnchor:[r,r]});
+      const marker=L.marker(ll,{icon});marker.on('click',()=>discSetCity(d.city));marker.addTo(map);
+      const shorts={'名古屋':'名古屋','飛驒高山':'高山','上高地':'上高地','立山黑部':'立山','兼六園・金澤':'金澤'};
+      const lbl=L.divIcon({className:'city-label',html:`<span style="color:${d.color};text-shadow:0 0 3px #fff,0 0 3px #fff,1px 1px 0 #fff,-1px -1px 0 #fff">${shorts[d.city]}</span>`,iconAnchor:[-r-2,r/2]});
+      L.marker(ll,{icon:lbl,interactive:false}).addTo(map);
+    });
+  },80);
+
+  return `<div style="padding:8px 11px 6px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><div style="font-size:.59rem;font-weight:700;color:var(--dt3);letter-spacing:.8px">行程路線地圖・共${discAllSpots().length}個地點</div><div style="font-size:.54rem;color:var(--dt3)">點城市圓圈跳轉列表</div></div><div class="lyr-ctrl"><button id="lbtn-bus" class="lyr-btn" onclick="discTogLayer('bus',this)" style="background:rgba(192,112,32,.12);color:#884010;border:1px solid rgba(192,112,32,.35)">🚌 交通路線</button><button id="lbtn-time" class="lyr-btn" onclick="discTogLayer('time',this)" style="background:rgba(120,120,120,.1);color:#555;border:1px solid rgba(120,120,120,.25)">⏱ 時間標</button></div><div id="leafletMap"></div>${legH}</div>`;
+}
+
+function discTogLayer(name,btn){if(!window._mapLayers||!window._leafMap)return;const lg=window._mapLayers[name];if(!lg)return;const isOn=window._leafMap.hasLayer(lg);if(isOn)window._leafMap.removeLayer(lg);else window._leafMap.addLayer(lg);if(btn)btn.classList.toggle('off',isOn);}
+
+// ═══════════════════════════════════
+//  SCROLL HELPERS
+// ═══════════════════════════════════
+function scrollToTL(){const dm={overview:'d1',d1:'d1',d2:'d2',d3:'d3',d4:'d4',d5:'d5',disc:'d1',info:'d1'};const t=dm[curTab]||'d1';if(!['d1','d2','d3','d4','d5'].includes(curTab)){switchTab(t);setTimeout(()=>document.getElementById('tl-'+t)?.scrollIntoView({behavior:'smooth',block:'start'}),300);}else{document.getElementById('tl-'+curTab)?.scrollIntoView({behavior:'smooth',block:'start'});}}
+function scrollToExp(){const dm={overview:'d1',d1:'d1',d2:'d2',d3:'d3',d4:'d4',d5:'d5',disc:'d1',info:'d1'};const t=dm[curTab]||'d1';if(!['d1','d2','d3','d4','d5'].includes(curTab)){switchTab(t);setTimeout(()=>document.querySelector('#panel-'+t+' .esec')?.scrollIntoView({behavior:'smooth',block:'center'}),300);}else{document.querySelector('#panel-'+curTab+' .esec')?.scrollIntoView({behavior:'smooth',block:'center'});}}
+
+// ═══════════════════════════════════
+//  POLLING (30s collaborative sync)
+// ═══════════════════════════════════
+let lastHash='';
+async function pollUpdates(){
+  try{
+    const[tl,chk,notes,sn,exp]=await Promise.all([sGet(SK.tl),sGet(SK.chk),sGet(SK.notes),sGet(SK.sn),sGet(SK.exp)]);
+    const hash=JSON.stringify({tl,chk,notes,sn,exp});
+    if(hash!==lastHash&&lastHash!==''){
+      if(tl){Object.assign(tlData,tl);['d1','d2','d3','d4','d5'].forEach(d=>buildTimeline(d));}
+      if(chk)Object.entries(chk).forEach(([id,done])=>{const el=document.getElementById(id);if(el){if(done)el.classList.add('done');else el.classList.remove('done');}});
+      if(notes)Object.entries(notes).forEach(([day,v])=>{const ta=document.getElementById('notes-'+day);if(ta&&document.activeElement!==ta)ta.value=v;});
+      if(sn)Object.entries(sn).forEach(([id,v])=>{const ta=document.getElementById('sn-'+id);if(ta&&document.activeElement!==ta)ta.value=v;});
+      if(exp){Object.assign(expenses,exp);['d1','d2','d3','d4','d5'].forEach(d=>renderExp(d));}
+      showToast('↻ 已同步家人的更新',2500);
+    }
+    lastHash=hash;setSync('ok');
+  }catch{setSync('err');}
+}
+
+// ═══════════════════════════════════
+//  INIT
+// ═══════════════════════════════════
+// ═══════════════════════════════════
+//  WEATHER (Open-Meteo, free, no key)
+// ═══════════════════════════════════
+const WX_SPOTS=[
+  {id:'wx-d1',lat:35.170,lon:136.906,date:'2026-05-15',city:'名古屋'},
+  {id:'wx-d2',lat:36.146,lon:137.252,date:'2026-05-16',city:'高山'},
+  {id:'wx-d3',lat:36.577,lon:137.523,date:'2026-05-17',city:'立山'},
+  {id:'wx-d4',lat:36.561,lon:136.656,date:'2026-05-18',city:'金澤'},
+  {id:'wx-d5',lat:35.170,lon:136.906,date:'2026-05-19',city:'名古屋'}
+];
+const WMO_ICON={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌦',55:'🌧',61:'🌧',63:'🌧',65:'🌧',71:'🌨',73:'🌨',75:'❄️',80:'🌦',81:'🌧',82:'⛈',95:'⛈',96:'⛈',99:'⛈'};
+const WMO_DESC={0:'晴天',1:'大致晴',2:'部分多雲',3:'陰天',45:'有霧',48:'霧淞',51:'小毛雨',53:'毛雨',55:'濃毛雨',61:'小雨',63:'中雨',65:'大雨',71:'小雪',73:'中雪',75:'大雪',80:'陣雨',81:'中陣雨',82:'強陣雨',95:'雷陣雨',96:'冰雹雷雨',99:'強冰雹雷雨'};
+
+async function fetchWeather(){
+  for(const sp of WX_SPOTS){
+    try{
+      const url=`https://api.open-meteo.com/v1/forecast?latitude=${sp.lat}&longitude=${sp.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo&start_date=${sp.date}&end_date=${sp.date}`;
+      const r=await fetch(url);const d=await r.json();
+      const wc=d.daily.weathercode[0];
+      const tmax=Math.round(d.daily.temperature_2m_max[0]);
+      const tmin=Math.round(d.daily.temperature_2m_min[0]);
+      const card=document.getElementById(sp.id);
+      if(card){
+        card.querySelector('.wx-ico').textContent=WMO_ICON[wc]||'🌡';
+        card.querySelector('.wx-temp').textContent=`${tmax}°/${tmin}°`;
+        card.querySelector('.wx-desc').textContent=WMO_DESC[wc]||'--';
+        if(wc>=61&&wc<=82)card.classList.add('rain');
+        else if(wc>=71&&wc<=75)card.classList.add('snow');
+        else if(wc===0||wc===1)card.classList.add('clear');
+        else card.classList.add('cloud');
+        card.onclick=()=>switchTab({d1:'d1',d2:'d2',d3:'d3',d4:'d4',d5:'d5'}[sp.id.replace('wx-','')]);
+        // Update day panel weather badge
+        const dayBadge=document.getElementById('dwx-'+sp.id.replace('wx-',''));
+        if(dayBadge){dayBadge.innerHTML=`<div style="font-size:18px">${WMO_ICON[wc]||'🌡'}</div><div style="font-family:'Shippori Mincho',serif;font-size:11px;font-weight:700;color:var(--k)">${tmax}°</div><div style="font-size:9px">${WMO_DESC[wc]?.slice(0,4)||'--'}</div>`;}
+        // Also update the overview map popup if map is ready
+        if(window._ovWxMarkers&&window._ovWxMarkers[sp.id]){
+          window._ovWxMarkers[sp.id].setIcon(L.divIcon({className:'',html:`<div style="background:white;border:1px solid #ddd;border-radius:6px;padding:3px 6px;font-size:10px;font-weight:700;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.15)">${WMO_ICON[wc]||'🌡'} ${tmax}°</div>`,iconAnchor:[20,30]}));
+        }
+      }
+    }catch(e){const card=document.getElementById(sp.id);if(card){card.querySelector('.wx-ico').textContent='🌡';card.querySelector('.wx-temp').textContent='--';card.querySelector('.wx-desc').textContent='無資料';}}
+  }
+}
+
+// ═══════════════════════════════════
+//  OVERVIEW MAP
+// ═══════════════════════════════════
+const OV_CITIES=[
+  {city:'名古屋',ll:[35.170,136.906],color:'#C96A2A',emoji:'🌆',tab:'d1',day:'D1/D4/D5'},
+  {city:'飛驒高山',ll:[36.146,137.252],color:'#C8922A',emoji:'🏘',tab:'d2',day:'D2'},
+  {city:'上高地',ll:[36.243,137.632],color:'#5A8A6A',emoji:'🏔',tab:'d2',day:'D2'},
+  {city:'立山黑部',ll:[36.577,137.523],color:'#3D6B8E',emoji:'❄️',tab:'d3',day:'D3'},
+  {city:'金澤',ll:[36.561,136.656],color:'#7B6BA8',emoji:'🌸',tab:'d4',day:'D4'}
+];
+
+function initOvMap(){
+  if(window._ovMap){window._ovMap.remove();window._ovMap=null;}
+  const container=document.getElementById('ovMap');if(!container)return;
+  const map=L.map('ovMap',{center:[36.0,137.2],zoom:7,zoomControl:true,attributionControl:false,scrollWheelZoom:false});
+  window._ovMap=map;
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:12,minZoom:5}).addTo(map);
+  L.control.attribution({prefix:false}).addTo(map);
+  map.attributionControl.addAttribution('© <a href="https://www.openstreetmap.org/copyright">OSM</a>');
+
+  // Route layers
+  const lyrBus=L.layerGroup().addTo(map),lyrTime=L.layerGroup().addTo(map),lyrWx=L.layerGroup().addTo(map);
+  window._ovLayers={bus:lyrBus,time:lyrTime,wx:lyrWx};
+
+  L.polyline([[35.170,136.906],[36.146,137.252]],{color:'#C07020',weight:2.5,opacity:.85,dashArray:'8 4'}).addTo(lyrBus);
+  L.polyline([[36.146,137.252],[36.243,137.632]],{color:'#5A8A6A',weight:2,opacity:.8,dashArray:'6 4'}).addTo(lyrBus);
+  L.polyline([[36.146,137.252],[36.577,137.523]],{color:'#3D6B8E',weight:2.5,opacity:.85,dashArray:'8 4'}).addTo(lyrBus);
+  L.polyline([[36.577,137.523],[36.561,136.656]],{color:'#3D6B8E',weight:2.5,opacity:.85,dashArray:'8 4'}).addTo(lyrBus);
+  L.polyline([[36.561,136.656],[36.257,136.905],[35.170,136.906]],{color:'#7B6BA8',weight:2,opacity:.8,dashArray:'6 4'}).addTo(lyrBus);
+
+  function tL(lat,lon,txt,bg,fc){return L.marker([lat,lon],{icon:L.divIcon({className:'',html:`<div style="background:${bg};color:${fc};border-radius:4px;padding:2px 5px;font-size:9px;font-family:serif;font-weight:700;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.15)">${txt}</div>`,iconAnchor:[0,8]}),interactive:false});}
+  tL(35.65,137.08,'高速≈2.5h','rgba(255,234,190,.95)','#884010').addTo(lyrTime);
+  tL(36.19,137.44,'巴士≈1h','rgba(200,240,200,.95)','#2A6040').addTo(lyrTime);
+  tL(36.36,137.39,'巴士≈2h','rgba(180,210,240,.95)','#1A4880').addTo(lyrTime);
+  tL(36.57,137.08,'巴士≈1h','rgba(180,210,240,.95)','#1A4880').addTo(lyrTime);
+  tL(36.25,136.78,'高速≈2.5h','rgba(220,210,240,.95)','#4A3890').addTo(lyrTime);
+
+  // Airport
+  L.marker([34.858,136.805],{icon:L.divIcon({className:'',html:'<div style="background:#1A4898;color:#fff;border-radius:5px;padding:2px 5px;font-size:9px;font-weight:700;font-family:serif;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3)">✈NGO</div>',iconAnchor:[20,11]}),interactive:false}).addTo(map);
+
+  // Weather placeholder markers (updated by fetchWeather)
+  const wxM={};
+  WX_SPOTS.forEach(sp=>{
+    const m=L.marker([sp.lat,sp.lon],{icon:L.divIcon({className:'',html:`<div style="background:white;border:1px solid #ddd;border-radius:6px;padding:3px 6px;font-size:10px;font-weight:700;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.15)">⏳--</div>`,iconAnchor:[20,30]}),interactive:false,zIndexOffset:1000});
+    m.addTo(lyrWx);wxM[sp.id]=m;
+  });
+  window._ovWxMarkers=wxM;
+
+  // City circles
+  const legEl=document.getElementById('ov-legend');if(legEl)legEl.innerHTML='';
+  OV_CITIES.forEach(c=>{
+    const r=16,sz=r*2;
+    const icon=L.divIcon({className:'',html:`<div style="width:${sz}px;height:${sz}px;background:${c.color};border-radius:50%;border:2px solid rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;box-shadow:0 2px 6px rgba(0,0,0,.25);cursor:pointer">${c.day}</div>`,iconSize:[sz,sz],iconAnchor:[r,r]});
+    const marker=L.marker(c.ll,{icon});
+    marker.on('click',()=>switchTab(c.tab));
+    marker.bindTooltip(`<b>${c.emoji} ${c.city}</b><br>${c.day}`,{direction:'top',offset:[0,-r-4]});
+    marker.addTo(map);
+
+    const lbl=L.divIcon({className:'',html:`<span style="color:${c.color};font-family:'Shippori Mincho',serif;font-weight:700;font-size:10px;text-shadow:0 0 3px #fff,0 0 3px #fff,1px 1px 0 #fff,-1px -1px 0 #fff;white-space:nowrap">${c.city}</span>`,iconAnchor:[-r-2,r/2]});
+    L.marker(c.ll,{icon:lbl,interactive:false}).addTo(map);
+
+    if(legEl){const d=document.createElement('div');d.style.cssText=`display:flex;align-items:center;gap:3px;font-size:.58rem;background:#fff;border:1px solid ${c.color}30;border-radius:7px;padding:3px 7px;cursor:pointer;color:#5A4535`;d.innerHTML=`<span style="width:7px;height:7px;border-radius:50%;background:${c.color};display:inline-block;flex-shrink:0"></span>${c.emoji} ${c.city}`;d.onclick=()=>switchTab(c.tab);legEl.appendChild(d);}
+  });
+}
+
+function ovTogLayer(name,btn){
+  if(!window._ovLayers||!window._ovMap)return;
+  const lg=window._ovLayers[name];if(!lg)return;
+  const isOn=window._ovMap.hasLayer(lg);
+  if(isOn)window._ovMap.removeLayer(lg);else window._ovMap.addLayer(lg);
+  if(btn)btn.classList.toggle('off',isOn);
+}
+
+window.addEventListener('DOMContentLoaded',async()=>{
+  setSync('sync');
+  checkNotifBtn();
+  await Promise.all([loadTL(),loadChecks(),loadNotes(),loadSpotNotes(),loadExp(),loadReminders()]);
+  setSync('ok');
+  discInit();
+  // Init overview map after a small delay (DOM must be ready)
+  setTimeout(()=>{initOvMap();fetchWeather();},150);
+  lastHash=JSON.stringify(await Promise.all([sGet(SK.tl),sGet(SK.chk),sGet(SK.notes),sGet(SK.sn),sGet(SK.exp)]));
+  setInterval(pollUpdates,30000);
+});
+</script>
+</body>
+</html>
