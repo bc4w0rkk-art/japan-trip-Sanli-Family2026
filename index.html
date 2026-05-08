@@ -599,7 +599,7 @@ body{background:var(--wa);color:var(--k);font-family:'Noto Sans TC',sans-serif;f
 //  JSONBIN.IO 同步層
 // ═══════════════════════════════════
 const JSONBIN_KEY  = '$2a$10$pssUbfaGvEWYMBslGpQOA.CXkK6S/an.W.MRB5czPVVjjYmHgLZz.';
-const JSONBIN_BIN  = '$2a$10$SEhQojsvWbKaDEA3DeLWse/tztZ55460nqEG7C3BFrBiM8zccWnlC';   // ← 步驟說明見下方
+const JSONBIN_BIN  = '69fd9ffbadc21f119a6e4f40';   // ← 步驟說明見下方
 const JSONBIN_BASE = 'https://api.jsonbin.io/v3';
 const SK = {tl:'tl',chk:'chk',notes:'notes',sn:'sn',exp:'exp',rem:'rem'};
 
@@ -617,7 +617,7 @@ const SK = {tl:'tl',chk:'chk',notes:'notes',sn:'sn',exp:'exp',rem:'rem'};
 let _syncReady = false;
 
 async function initSync(){
-  if(JSONBIN_BIN === 'YOUR_BIN_ID'){
+  if(JSONBIN_BIN === 'YOUR_BIN_ID'){F
     setSync('err');
     console.warn('請依說明填入 JSONBIN_BIN ID');
     return;
