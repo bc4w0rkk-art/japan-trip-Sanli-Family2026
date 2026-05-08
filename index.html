@@ -596,13 +596,98 @@ body{background:var(--wa);color:var(--k);font-family:'Noto Sans TC',sans-serif;f
 <script>
 'use strict';
 // ═══════════════════════════════════
-//  SHARED STORAGE HELPERS
+//  JSONBIN.IO 同步層
+//  免費・無需任何複雜設定
+//  申請步驟（5分鐘）：
+//  1. 前往 https://jsonbin.io → 免費註冊
+//  2. 右上角 API Keys → 建立一個 → 複製 Master Key
+//  3. 把下方 JSONBIN_KEY 換成你的 Key（格式：$2a$10$...）
+//  4. 第一次開啟網頁會自動建立 BIN，之後就能多人同步
 // ═══════════════════════════════════
-const SHARED = true;
-const SK = {tl:'jp26_tl',chk:'jp26_chk',notes:'jp26_notes',sn:'jp26_sn',exp:'jp26_exp',rem:'jp26_rem'};
+const JSONBIN_KEY = '$2a$10$pssUbfaGvEWYMBslGpQOA.CXkK6S/an.W.MRB5czPVVjjYmHgLZz.'; // ← 貼上你的 API Key
+const JSONBIN_BASE = 'https://api.jsonbin.io/v3';
+const SK = {tl:'tl',chk:'chk',notes:'notes',sn:'sn',exp:'exp',rem:'rem'};
 
-async function sGet(k){try{const r=await window.storage.get(k,SHARED);return r?JSON.parse(r.value):null;}catch{return null;}}
-async function sSet(k,v){try{await window.storage.set(k,JSON.stringify(v),SHARED);return true;}catch{return false;}}
+let _binId = localStorage.getItem('jp26_binId') || null;
+let _syncReady = false;
+let _lastEtag = null;
+
+// ── 初始化：第一次建立 BIN，之後直接讀取 ──
+async function initSync(){
+  if(JSONBIN_KEY === '$2a$10$pssUbfaGvEWYMBslGpQOA.CXkK6S/an.W.MRB5czPVVjjYmHgLZz.'){
+    setSync('err');
+    console.warn('請在 JSONBIN_KEY 填入你的 JSONBin API Key');
+    return;
+  }
+  try{
+    if(!_binId){
+      // 首次：建立一個新的 BIN
+      const r = await fetch(`${JSONBIN_BASE}/b`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Master-Key':JSONBIN_KEY,'X-Bin-Name':'jp26-trip','X-Bin-Private':'false'},
+        body: JSON.stringify({_init:true})
+      });
+      const d = await r.json();
+      _binId = d.metadata?.id;
+      if(_binId){
+        localStorage.setItem('jp26_binId', _binId);
+        console.log('JSONBin BIN 建立成功：', _binId);
+      }
+    }
+    _syncReady = !!_binId;
+    setSync(_syncReady ? 'ok' : 'err');
+  }catch(e){
+    console.warn('JSONBin init 失敗，使用本機模式：', e);
+    _syncReady = false;
+    setSync('err');
+  }
+}
+
+// ── 讀取單一 key（從整包 BIN 資料裡取出） ──
+async function sGet(k){
+  // 先從 localStorage 快取讀（離線或省流量）
+  const cached = localStorage.getItem('jp26_'+k);
+  // 背景嘗試從雲端讀最新值
+  if(_syncReady && _binId){
+    try{
+      const r = await fetch(`${JSONBIN_BASE}/b/${_binId}/latest`,{
+        headers:{'X-Master-Key':JSONBIN_KEY}
+      });
+      if(r.ok){
+        const d = await r.json();
+        const val = d.record?.[k];
+        if(val !== undefined){
+          localStorage.setItem('jp26_'+k, JSON.stringify(val));
+          return val;
+        }
+      }
+    }catch{}
+  }
+  try{ return cached ? JSON.parse(cached) : null; }catch{ return null; }
+}
+
+// ── 寫入：本機立即更新，再把整包資料推到雲端 ──
+async function sSet(k, v){
+  localStorage.setItem('jp26_'+k, JSON.stringify(v));
+  if(!_syncReady || !_binId) return false;
+  try{
+    // 讀現有資料，合併後整包寫回（JSONBin 免費版每個 BIN 一包資料）
+    const r = await fetch(`${JSONBIN_BASE}/b/${_binId}/latest`,{
+      headers:{'X-Master-Key':JSONBIN_KEY}
+    });
+    let current = {};
+    if(r.ok){ const d = await r.json(); current = d.record || {}; }
+    current[k] = v;
+    const wr = await fetch(`${JSONBIN_BASE}/b/${_binId}`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','X-Master-Key':JSONBIN_KEY},
+      body: JSON.stringify(current)
+    });
+    return wr.ok;
+  }catch(e){
+    return false;
+  }
+}
 
 // ═══════════════════════════════════
 //  STATE
@@ -619,7 +704,9 @@ let remTimers=[];
 function setSync(s){
   const dot=document.getElementById('sdot'),txt=document.getElementById('syncTxt');
   dot.className='sdot'+(s==='ok'?'':s==='err'?' err':' syncing');
-  txt.textContent=s==='ok'?'多人同步已啟動・資料即時共享':s==='sync'?'正在同步⋯':'同步離線・暫存本地';
+  if(s==='ok')  txt.textContent='雲端同步中・所有人資料一致';
+  if(s==='sync')txt.textContent='連線中⋯';
+  if(s==='err') txt.textContent='⚠️ 離線模式・資料暫存本機（請填入 API Key）';
 }
 
 // ═══════════════════════════════════
@@ -1055,14 +1142,22 @@ function scrollToTL(){const dm={overview:'d1',d1:'d1',d2:'d2',d3:'d3',d4:'d4',d5
 function scrollToExp(){const dm={overview:'d1',d1:'d1',d2:'d2',d3:'d3',d4:'d4',d5:'d5',disc:'d1',info:'d1'};const t=dm[curTab]||'d1';if(!['d1','d2','d3','d4','d5'].includes(curTab)){switchTab(t);setTimeout(()=>document.querySelector('#panel-'+t+' .esec')?.scrollIntoView({behavior:'smooth',block:'center'}),300);}else{document.querySelector('#panel-'+curTab+' .esec')?.scrollIntoView({behavior:'smooth',block:'center'});}}
 
 // ═══════════════════════════════════
-//  POLLING (30s collaborative sync)
+//  POLLING (每 30 秒輪詢雲端更新)
 // ═══════════════════════════════════
 let lastHash='';
 async function pollUpdates(){
+  if(!_syncReady||!_binId){setSync('err');return;}
   try{
-    const[tl,chk,notes,sn,exp]=await Promise.all([sGet(SK.tl),sGet(SK.chk),sGet(SK.notes),sGet(SK.sn),sGet(SK.exp)]);
-    const hash=JSON.stringify({tl,chk,notes,sn,exp});
+    // 用 /latest 端點，比較整包 hash，有變化才更新 UI
+    const r=await fetch(`${JSONBIN_BASE}/b/${_binId}/latest`,{
+      headers:{'X-Master-Key':JSONBIN_KEY}
+    });
+    if(!r.ok){setSync('err');return;}
+    const d=await r.json();
+    const rec=d.record||{};
+    const hash=JSON.stringify(rec);
     if(hash!==lastHash&&lastHash!==''){
+      const{tl,chk,notes,sn,exp}=rec;
       if(tl){Object.assign(tlData,tl);['d1','d2','d3','d4','d5'].forEach(d=>buildTimeline(d));}
       if(chk)Object.entries(chk).forEach(([id,done])=>{const el=document.getElementById(id);if(el){if(done)el.classList.add('done');else el.classList.remove('done');}});
       if(notes)Object.entries(notes).forEach(([day,v])=>{const ta=document.getElementById('notes-'+day);if(ta&&document.activeElement!==ta)ta.value=v;});
@@ -1070,7 +1165,8 @@ async function pollUpdates(){
       if(exp){Object.assign(expenses,exp);['d1','d2','d3','d4','d5'].forEach(d=>renderExp(d));}
       showToast('↻ 已同步家人的更新',2500);
     }
-    lastHash=hash;setSync('ok');
+    lastHash=hash;
+    setSync('ok');
   }catch{setSync('err');}
 }
 
@@ -1196,13 +1292,21 @@ function ovTogLayer(name,btn){
 window.addEventListener('DOMContentLoaded',async()=>{
   setSync('sync');
   checkNotifBtn();
+  // 初始化 JSONBin 同步（自動建立 BIN）
+  await initSync();
+  // 載入資料（雲端優先，離線用 localStorage）
   await Promise.all([loadTL(),loadChecks(),loadNotes(),loadSpotNotes(),loadExp(),loadReminders()]);
-  setSync('ok');
+  setSync(_syncReady ? 'ok' : 'err');
   discInit();
-  // Init overview map after a small delay (DOM must be ready)
   setTimeout(()=>{initOvMap();fetchWeather();},150);
-  lastHash=JSON.stringify(await Promise.all([sGet(SK.tl),sGet(SK.chk),sGet(SK.notes),sGet(SK.sn),sGet(SK.exp)]));
-  setInterval(pollUpdates,30000);
+  // 設定初始 hash，之後每 30 秒輪詢
+  if(_syncReady){
+    try{
+      const r=await fetch(`${JSONBIN_BASE}/b/${_binId}/latest`,{headers:{'X-Master-Key':JSONBIN_KEY}});
+      if(r.ok){const d=await r.json();lastHash=JSON.stringify(d.record||{});}
+    }catch{}
+    setInterval(pollUpdates,30000);
+  }
 });
 </script>
 </body>
